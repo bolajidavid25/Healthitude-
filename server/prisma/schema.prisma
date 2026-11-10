@@ -1,0 +1,665 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Sex {
+  FEMALE
+  MALE
+  PREFER_NOT_TO_SAY
+}
+
+enum Relationship {
+  SPOUSE_PARTNER
+  PARENT
+  SIBLING
+  CHILD
+  FRIEND
+  OTHER
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  UNKNOWN
+}
+
+enum Genotype {
+  AA
+  AS
+  SS
+  AC
+  SC
+  UNKNOWN
+}
+
+enum PatientCategory {
+  NURSING_BREASTFEEDING_MOTHER
+  ELDERLY
+  STUDENT
+  CIVIL_SERVANT
+  CORPORATE_COMPANY_MEMBER
+  NHIS_USER
+  INSURANCE_MEMBER
+  GENERAL_PATIENT
+}
+
+enum CategoryVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ConsentType {
+  TERMS_AND_PRIVACY
+  HEALTH_DATA_PROCESSING
+  PROFESSIONAL_ACCESS
+  PATIENT_DATA_ACKNOWLEDGEMENT
+  AI_LIMITATIONS
+  BREAK_GLASS_DISCLOSURE
+  INFORMATION_ACCURACY
+}
+
+enum ComplaintSeverity {
+  MILD
+  MODERATE
+  SEVERE
+}
+
+enum ComplaintStatus {
+  NEW
+  UNDER_REVIEW
+  REFERRED_TO_SPECIALIST
+  RESOLVED
+}
+
+enum ClinicalRecordType {
+  DIAGNOSIS
+  VITAL_SIGNS
+  LAB_RESULT
+  TREATMENT_NOTE
+  REFERRAL
+}
+
+model User {
+  id           String   @id @default(uuid())
+  firstName    String
+  middleName   String?
+  lastName     String
+  dateOfBirth  DateTime @db.Date
+  sex          Sex
+  email        String   @unique
+  phoneNumber  String   @unique
+  passwordHash String
+  profilePhoto String?
+
+  address          Address?
+  emergencyContact EmergencyContact?
+  healthProfile    HealthProfile?
+  patientCategory  PatientCategoryRecord?
+  consents         ConsentRecord[]
+  sessions         Session[]
+  complaints       Complaint[]
+  clinicalRecords  ClinicalRecord[]
+  prescriptions    Prescription[]
+  adherenceLogs    MedicationAdherence[]
+  appointments     Appointment[]
+  emergencyCases   EmergencyCase[]
+  notifications    Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Address {
+  id        String @id @default(uuid())
+  userId    String @unique
+  street    String
+  city      String
+  state     String
+  district  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmergencyContact {
+  id           String       @id @default(uuid())
+  userId       String       @unique
+  fullName     String
+  relationship Relationship
+  phoneNumber  String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HealthProfile {
+  id                   String     @id @default(uuid())
+  userId               String     @unique
+  bloodGroup           BloodGroup?
+  genotype             Genotype?
+  knownAllergies       String?
+  medicalConditions    String?
+  currentMedications   String?
+  previousSurgeries    String?
+  medicalHistory       String?
+  patientReported      Boolean    @default(true)
+  clinicallyVerified   Boolean    @default(false)
+  verifiedAt           DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PatientCategoryRecord {
+  id                  String                    @id @default(uuid())
+  userId              String                    @unique
+  category            PatientCategory
+  verificationStatus  CategoryVerificationStatus @default(PENDING)
+  nhisId               String?
+  nhisSchemeType       String?
+  supportingDocument   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConsentRecord {
+  id          String      @id @default(uuid())
+  userId      String
+  consentType ConsentType
+  accepted    Boolean
+  acceptedAt  DateTime?
+  version     String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, consentType, version])
+  @@index([userId])
+}
+
+model Session {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+model Complaint {
+  id             String            @id @default(uuid())
+  referenceId    String            @unique
+  patientId      String
+  symptoms       String
+  severity       ComplaintSeverity
+  duration       String?
+  status         ComplaintStatus   @default(NEW)
+  assignedDoctor String?
+  clinicalNotes  String?
+  resolvedAt     DateTime?
+
+  patient User @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([status])
+}
+
+model ClinicalRecord {
+  id             String             @id @default(uuid())
+  recordNumber   String             @unique
+  patientId      String
+  type           ClinicalRecordType
+  content        String
+  author         String
+  authorRole     String?
+  authorId       String?
+  verified       Boolean            @default(true)
+  verifiedAt     DateTime           @default(now())
+  attachmentName String?
+  attachmentUrl  String?
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  patient        User               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  DISCONTINUED
+}
+
+enum AdherenceStatus {
+  TAKEN
+  SKIPPED
+}
+
+model Prescription {
+  id                 String             @id @default(uuid())
+  prescriptionNumber String             @unique
+  patientId          String
+  medicine           String
+  dose               String
+  frequency          String
+  duration           String
+  prescriber         String
+  prescriberId       String?
+  status             PrescriptionStatus @default(ACTIVE)
+  instructions       String?
+  startDate          DateTime           @default(now())
+  endDate            DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  patient            User               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  adherenceLogs      MedicationAdherence[]
+
+  @@index([patientId])
+  @@index([status])
+  @@index([prescriptionNumber])
+}
+
+model MedicationAdherence {
+  id             String          @id @default(uuid())
+  prescriptionId String
+  patientId      String
+  date           DateTime        @db.Date
+  status         AdherenceStatus
+  notes          String?
+  recordedAt     DateTime        @default(now())
+
+  prescription   Prescription    @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  patient        User            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([prescriptionId, date])
+  @@index([patientId])
+  @@index([prescriptionId])
+  @@index([date])
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  PENDING_CONFIRMATION
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Appointment {
+  id                 String            @id @default(uuid())
+  appointmentNumber  String            @unique
+  patientId          String
+  doctorName         String
+  doctorId           String?
+  department         String?
+  type               String
+  reason             String
+  date               DateTime          @db.Date
+  time               String
+  status             AppointmentStatus @default(PENDING_CONFIRMATION)
+  symptoms           String?
+  duration           String?
+  severity           String?
+  notes              String?
+  documents          String[]          @default([])
+  referralDoc        String?
+  schedulingUrl      String?
+  cancellationReason String?
+  cancelledAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  patient            User              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([status])
+  @@index([date])
+  @@index([appointmentNumber])
+}
+
+enum EmergencyCaseStatus {
+  ACTIVE
+  RESPONDED
+  RESOLVED
+  CANCELLED
+}
+
+model EmergencyCase {
+  id                 String              @id @default(uuid())
+  caseNumber         String              @unique
+  patientId          String
+  status             EmergencyCaseStatus @default(ACTIVE)
+  initiatedBy        String
+  reason             String?
+  responderName      String?
+  responderId        String?
+  responderRole      String?
+  respondedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  resolvedAt         DateTime?
+  resolutionNotes    String?
+  snapshot           Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  patient            User                @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  auditLogs          EmergencyAuditLog[]
+
+  @@index([patientId])
+  @@index([status])
+  @@index([caseNumber])
+  @@index([createdAt])
+}
+
+model EmergencyAuditLog {
+  id              String         @id @default(uuid())
+  emergencyCaseId String?
+  patientId       String
+  actor           String
+  actorId         String
+  actorRole       String
+  action          String
+  target          String
+  severity        String         @default("normal")
+  justification   String?
+  accessContext   Json?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime       @default(now())
+
+  emergencyCase   EmergencyCase? @relation(fields: [emergencyCaseId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([emergencyCaseId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_RESCHEDULED
+  APPOINTMENT_CANCELLED
+  COMPLAINT_SUBMITTED
+  COMPLAINT_UPDATED
+  CLINICAL_RECORD_ADDED
+  PRESCRIPTION_ADDED
+  EMERGENCY_ALERT
+  GENERAL
+}
+
+model Notification {
+  id            String           @id @default(uuid())
+  userId        String
+  type          NotificationType @default(GENERAL)
+  title         String
+  message       String
+  read          Boolean          @default(false)
+  readAt        DateTime?
+  eventId       String?
+  referenceType String?
+  referenceId   String?
+  link          String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STEP 2: PROFESSIONAL IDENTITY, AUTHENTICATION & VERIFICATION MODELS
+// ══════════════════════════════════════════════════════════════════════════════
+
+enum ProfessionalCategory {
+  DOCTOR
+  NURSE
+  PHARMACIST
+}
+
+enum ProfessionalVerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  VERIFIED_WITH_RESTRICTIONS
+  REJECTED
+  EXPIRED
+  SUSPENDED
+  REVOKED
+}
+
+enum ProfessionalAccountStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+model Professional {
+  id                      String                         @id @default(uuid())
+  firstName               String
+  middleName              String?
+  lastName                String
+  email                   String                         @unique
+  phoneNumber             String                         @unique
+  passwordHash            String
+  category                ProfessionalCategory           @default(DOCTOR)
+  profession              String                         @default("Medical Doctor")
+  specialty               String
+  specialistQualification String?
+  licenceNumber           String                         @unique
+  licenceExpiry           DateTime                       @db.Date
+  regulatoryBody          String
+  facility                String
+  qualification           String?
+  institution             String?
+  graduationYear          Int?
+  verificationStatus      ProfessionalVerificationStatus @default(PENDING)
+  accountStatus           ProfessionalAccountStatus      @default(ACTIVE)
+  profilePhoto            String?
+  restrictions            String?
+
+  // Verification review audit fields
+  verifiedAt              DateTime?
+  reviewedAt              DateTime?
+  reviewedBy              String?                        // ID of the Healthitude administrator
+  rejectionReason         String?
+  decisionNotes           String?
+  revalidationDate        DateTime?                      @db.Date
+
+  // Consents & agreements
+  termsAccepted           Boolean                        @default(true)
+  termsAcceptedAt         DateTime                       @default(now())
+
+  // Relations
+  sessions                ProfessionalSession[]
+  verificationLogs        ProfessionalVerificationLog[]
+  documents               ProfessionalCredentialDocument[]
+
+  createdAt               DateTime                       @default(now())
+  updatedAt               DateTime                       @updatedAt
+
+  @@index([email])
+  @@index([licenceNumber])
+  @@index([verificationStatus])
+  @@index([category])
+  @@index([accountStatus])
+}
+
+model ProfessionalCredentialDocument {
+  id             String       @id @default(uuid())
+  professionalId String
+  documentType   String       // e.g. "MEDICAL_LICENCE", "DEGREE_CERTIFICATE", "SPECIALTY_CERTIFICATE", "GOVERNMENT_ID"
+  title          String
+  documentRef    String       // Internal storage key/reference (NOT a public URL)
+  fileName       String
+  fileSize       Int
+  mimeType       String
+  verified       Boolean      @default(false)
+  verifiedAt     DateTime?
+  verifiedBy     String?
+  uploadedAt     DateTime     @default(now())
+
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@index([documentType])
+}
+
+model ProfessionalSession {
+  id             String       @id @default(uuid())
+  professionalId String
+  tokenHash      String       @unique
+  userAgent      String?
+  ipAddress      String?
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model ProfessionalVerificationLog {
+  id             String                         @id @default(uuid())
+  professionalId String
+  action         String?                        // e.g. "START_REVIEW", "VERIFY", "VERIFY_WITH_RESTRICTIONS", "REJECT", "SUSPEND", "EXPIRE", "REVOKE", "REINSTATE"
+  fromStatus     ProfessionalVerificationStatus
+  toStatus       ProfessionalVerificationStatus
+  adminId        String
+  reason         String?
+  notes          String?
+  restrictions   String?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime                       @default(now())
+
+  professional   Professional                   @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@index([createdAt])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ADMINISTRATOR PORTAL SUBSYSTEM MODELS
+// ══════════════════════════════════════════════════════════════════════════════
+
+enum AdminRole {
+  SUPER_ADMIN
+  COMPLIANCE_ADMIN
+  OPERATIONS_ADMIN
+}
+
+enum AdminStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+model Administrator {
+  id           String          @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String          @unique
+  passwordHash String
+  role         AdminRole       @default(SUPER_ADMIN)
+  status       AdminStatus     @default(ACTIVE)
+  department   String?
+  employeeId   String?         @unique
+  profilePhoto String?
+
+  sessions     AdminSession[]
+  auditLogs    AdminAuditLog[]
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model AdminSession {
+  id            String        @id @default(uuid())
+  adminId       String
+  tokenHash     String        @unique
+  scope         String        @default("admin:read,admin:write")
+  userAgent     String?
+  ipAddress     String?
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  administrator Administrator @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model AdminAuditLog {
+  id            String        @id @default(uuid())
+  adminId       String
+  adminEmail    String
+  action        String        // e.g. "PROFESSIONAL_VERIFIED", "PROFESSIONAL_REJECTED", "PRICE_ORDER_UPDATED"
+  targetType    String        // e.g. "Professional", "PricePlan", "User"
+  targetId      String?
+  targetName    String?
+  details       Json?
+  ipAddress     String?
+  userAgent     String?
+  severity      String        @default("normal") // "normal", "high", "critical"
+  createdAt     DateTime      @default(now())
+
+  administrator Administrator @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([action])
+  @@index([targetType])
+  @@index([createdAt])
+}
+
