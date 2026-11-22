@@ -276,7 +276,7 @@ export default function AngitiaAIWidget() {
       <div className="flex justify-end">
         <button
           onClick={() => setOpen((prev) => !prev)}
-          className="group flex items-center gap-2.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative"
+          className="group flex items-center justify-center text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden h-14 px-3.5 hover:px-5"
           style={{
             borderRadius: "9999px",
             background: open
@@ -285,10 +285,11 @@ export default function AngitiaAIWidget() {
             border: "1.5px solid rgba(255, 255, 255, 0.35)",
             boxShadow:
               "0 10px 25px -3px rgba(26, 63, 207, 0.45), 0 4px 10px -2px rgba(14, 165, 233, 0.35)",
-            padding: open ? "0.875rem" : "0.625rem 1.125rem",
+            minWidth: "3.5rem",
           }}
           aria-expanded={open}
-          aria-label={open ? "Close Angitia AI" : "Open Angitia AI Assistant"}
+          aria-label={open ? "Close Angitia AI" : "Angitia AI"}
+          title="Angitia AI"
         >
           {/* Subtle pulse wave on unopened state */}
           {!open && (
@@ -303,20 +304,15 @@ export default function AngitiaAIWidget() {
           {open ? (
             <X className="w-6 h-6 flex-shrink-0 text-white" />
           ) : (
-            <>
-              <div className="relative flex items-center justify-center">
-                <AngitiaIcon size={26} color="#ffffff" pulseColor="#38bdf8" />
+            <div className="flex items-center">
+              <div className="relative flex items-center justify-center flex-shrink-0">
+                <AngitiaIcon size={28} color="#ffffff" pulseColor="#38bdf8" />
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-bold tracking-tight text-white flex items-center gap-1.5 leading-none">
-                  Angitia AI
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                </span>
-                <span className="text-[10px] text-sky-200/90 font-medium leading-none mt-1">
-                  Ask Health Assistant
-                </span>
-              </div>
-            </>
+              <span className="max-w-0 opacity-0 group-hover:max-w-[140px] group-hover:opacity-100 group-hover:ml-2.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap text-sm font-bold tracking-tight text-white flex items-center gap-1.5 leading-none">
+                Angitia AI
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+              </span>
+            </div>
           )}
         </button>
       </div>
