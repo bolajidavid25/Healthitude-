@@ -3,6 +3,7 @@ import { Link } from "react-router"
 import logoBlue from "@/imports/Screenshot_2026-09-14_184508-removebg-preview.png"
 import logoWhite from "@/imports/Screenshot_2026-09-14_184307-removebg-preview.png"
 import AngitiaIcon from "@/components/AngitiaIcon"
+import AngitiaAIWidget from "@/components/AngitiaAIWidget"
 import {
   User,
   Stethoscope,
@@ -1789,177 +1790,6 @@ function Footer() {
   )
 }
 
-// ── Public AI Chat ────────────────────────────────────────────────────────────
-
-const PUBLIC_SUGGESTIONS = [
-  "What is hypertension?",
-  "How does telemedicine work?",
-  "What vaccinations do adults need?",
-  "What is a normal blood pressure reading?",
-  "How do I manage Type 2 diabetes?",
-  "What does NHIS cover?",
-]
-
-function PublicAIChat() {
-  const [open, setOpen] = useState(false)
-  const [input, setInput] = useState("")
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      text: "Hi, I am Angitia — Healthitude's health assistant. Ask me anything about general health: symptoms, conditions, medications, or how Healthitude works. I cannot diagnose, prescribe, or replace your doctor.",
-    },
-  ])
-  const bottomRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, open])
-
-  function send(text?: string) {
-    const msg = (text ?? input).trim()
-    if (!msg) return
-    setMessages((m) => [
-      ...m,
-      { role: "user", text: msg },
-      {
-        role: "assistant",
-        text: "That's a great health question. For personalised advice, I recommend consulting a verified Healthitude doctor. As general information: maintaining a balanced diet, regular physical activity, routine check-ups, and adhering to prescribed medications are cornerstones of good health. Create a free Healthitude account to connect with a verified professional who can give you advice specific to your situation.",
-      },
-    ])
-    setInput("")
-  }
-
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed bottom-24 right-6 z-50 flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
-          style={{ width: "360px", height: "500px" }}
-        >
-          {/* Header */}
-          <div
-            className="flex items-center justify-between px-4 py-3 border-b border-gray-100"
-            style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})` }}
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-                <AngitiaIcon size={18} color="white" pulseColor="#bfdbfe" />
-              </div>
-              <div>
-                <p className="text-white text-sm font-semibold leading-tight">
-                  Angitia
-                </p>
-                <p className="text-white/60 text-xs">
-                  General health knowledge · Free
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-white"
-              aria-label="Close Angitia chat"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Disclaimer */}
-          <div className="px-3 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-700 flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-            General information only — not a medical diagnosis or prescription.
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`flex ${
-                  m.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[82%] rounded-xl px-3.5 py-2.5 text-sm leading-snug ${
-                    m.role === "user"
-                      ? "text-white rounded-br-sm"
-                      : "bg-gray-100 text-gray-700 rounded-bl-sm"
-                  }`}
-                  style={m.role === "user" ? { background: BLUE } : {}}
-                >
-                  {m.text}
-                </div>
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Suggestions — show only before first user message */}
-          {messages.length === 1 && (
-            <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-              {PUBLIC_SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  className="text-xs px-2.5 py-1 border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Input */}
-          <div className="border-t border-gray-100 px-3 py-2.5 flex gap-2 items-center">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ask a health question..."
-            />
-            <button
-              onClick={() => send()}
-              className="btn-send !p-0 w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-lg text-white"
-              aria-label="Send message"
-            >
-              <Send className="w-4 h-4 btn-arrow" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* FAB with Ripple */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className={`group fixed bottom-6 right-6 z-50 flex items-center overflow-visible text-white shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-          open ? "bg-slate-700" : "btn-ripple"
-        }`}
-        style={{
-          borderRadius: "9999px",
-          width: open ? "3.5rem" : undefined,
-          height: "3.5rem",
-          padding: open ? "0" : undefined,
-          justifyContent: "center",
-        }}
-        aria-label="Angitia"
-      >
-        <span className="flex items-center gap-0 group-hover:gap-2.5 transition-all duration-300 px-4 group-hover:pr-5">
-          {open ? (
-            <X className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <AngitiaIcon size={28} color="white" pulseColor="#bfdbfe" />
-          )}
-          {!open && (
-            <span className="text-sm font-semibold whitespace-nowrap max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300">
-              Ask Angitia
-            </span>
-          )}
-        </span>
-      </button>
-    </>
-  )
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -1980,7 +1810,7 @@ export default function LandingPage() {
       <Roadmap />
       <CTA />
       <Footer />
-      <PublicAIChat />
+      <AngitiaAIWidget />
     </div>
   )
 }

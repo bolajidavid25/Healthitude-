@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Link } from "react-router"
 import logoBlue from "@/imports/Screenshot_2026-09-14_184508-removebg-preview.png"
+import AngitiaAIWidget from "@/components/AngitiaAIWidget"
 import {
   Stethoscope,
   RotateCcw,
@@ -2842,6 +2843,7 @@ export default function TelemedicinePage() {
         )}
         {screen === "records" && <ScreenRecords onBack={() => go("find")} />}
       </main>
+      <AngitiaAIWidget />
     </div>
   )
 }
