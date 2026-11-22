@@ -11,6 +11,8 @@ dotenv.config()
 const portNumber = Number(process.env.PORT) || 5000
 const nodeEnv = process.env.NODE_ENV || "development"
 const databaseUrl = process.env.DATABASE_URL
+const cookieSameSite =
+  (process.env.COOKIE_SAME_SITE as "lax" | "none" | "strict") || "lax"
 
 if (!databaseUrl) {
   throw new Error(
@@ -26,6 +28,7 @@ export const env = {
   NODE_ENV: nodeEnv,
   DATABASE_URL: databaseUrl,
   CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
+  COOKIE_SAME_SITE: cookieSameSite,
   UPLOAD_DIR: uploadDir,
 } as const
 

@@ -21,10 +21,12 @@ export const SESSION_TTL_MS = SESSION_TTL_DAYS * 24 * 60 * 60 * 1000
  * Rule I: Choose an appropriate SameSite policy (Lax protects top-level navigations while enabling SPA API calls).
  */
 export function getSessionCookieOptions(): CookieOptions {
+  const sameSite = env.COOKIE_SAME_SITE
+  const isNone = sameSite === "none"
   return {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: env.NODE_ENV === "production" || isNone,
+    sameSite,
     path: "/",
     maxAge: SESSION_TTL_MS,
   }
@@ -37,10 +39,12 @@ export function getSessionCookieOptions(): CookieOptions {
  * and mirror its value in the 'x-csrf-token' request header on state-changing requests.
  */
 export function getCsrfCookieOptions(): CookieOptions {
+  const sameSite = env.COOKIE_SAME_SITE
+  const isNone = sameSite === "none"
   return {
     httpOnly: false,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: env.NODE_ENV === "production" || isNone,
+    sameSite,
     path: "/",
     maxAge: SESSION_TTL_MS,
   }

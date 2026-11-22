@@ -707,10 +707,15 @@ export function getCsrfToken(): string | null {
   return inMemoryCsrfToken || getCookie("healthitude_csrf")
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(
-  /\/+$/,
-  "",
-)
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim()
+const API_BASE_URL = (
+  rawBaseUrl &&
+  !rawBaseUrl.startsWith("http://") &&
+  !rawBaseUrl.startsWith("https://") &&
+  !rawBaseUrl.startsWith("/")
+    ? `https://${rawBaseUrl}`
+    : rawBaseUrl
+).replace(/\/+$/, "")
 
 async function fetchApi<T>(
   endpoint: string,

@@ -15,20 +15,24 @@ export const ADMIN_SCOPE_WRITE = "admin:write"
 export const ADMIN_DEFAULT_SCOPES = `${ADMIN_SCOPE_READ},${ADMIN_SCOPE_WRITE}`
 
 export function getAdminSessionCookieOptions(): CookieOptions {
+  const sameSite = env.COOKIE_SAME_SITE
+  const isNone = sameSite === "none"
   return {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: env.NODE_ENV === "production" || isNone,
+    sameSite,
     path: "/",
     maxAge: ADMIN_SESSION_TTL_MS,
   }
 }
 
 export function getAdminCsrfCookieOptions(): CookieOptions {
+  const sameSite = env.COOKIE_SAME_SITE
+  const isNone = sameSite === "none"
   return {
     httpOnly: false,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: env.NODE_ENV === "production" || isNone,
+    sameSite,
     path: "/",
     maxAge: ADMIN_SESSION_TTL_MS,
   }
