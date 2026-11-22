@@ -13,8 +13,8 @@ import {
   ADMIN_DEFAULT_SCOPES,
   ADMIN_SCOPE_WRITE,
 } from "../utils/adminSession"
+import type { Administrator } from "../generated/prisma/client"
 import {
-  Administrator,
   AdminRole,
   AdminStatus,
   ProfessionalVerificationStatus,

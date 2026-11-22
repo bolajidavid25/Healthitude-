@@ -5,8 +5,9 @@
   "main": "src/server.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc --noEmit",
+    "build": "prisma generate && tsc --noEmit",
     "start": "tsx src/server.ts",
+    "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:foundation && npm run test:connectivity && npm run test:validation && npm run test:registration && npm run test:auth && npm run test:profile && npm run test:profile-settings && npm run test:dashboard && npm run test:complaint && npm run test:record && npm run test:prescription && npm run test:appointment && npm run test:provider && npm run test:telemedicine && npm run test:pricing && npm run test:emergency && npm run test:notification && npm run test:upload && npm run test:security && npm run test:e2e && npm run test:cross-module && npm run test:step15",
     "test:foundation": "tsx src/test-foundation.ts",
@@ -32,6 +33,7 @@
     "test:cross-module": "tsx src/cross-module.test.ts",
     "test:step15": "tsx src/step15-verification.test.ts",
     "test:professional": "tsx src/step2-professional.test.ts",
+    "test:doctor-patient": "tsx src/doctor-patient-connection.test.ts",
     "db:test": "tsx src/test-db.ts",
     "db:inspect": "tsx src/inspect-db.ts",
     "db:verify": "tsx src/verify-migration.ts",

@@ -25,10 +25,17 @@ export interface AppOptions {
 export function createApp(options?: AppOptions): Express {
   const app = express()
 
-  // 1. Security & CORS (Rule J, K: Explicit origin with credentials, no wildcard)
+  // Trust first proxy (required for Render/reverse proxies so req.ip and Secure cookies work)
+  app.set("trust proxy", 1)
+
+  // 1. Security & CORS (Rule J, K: Explicit origin(s) with credentials, no wildcard)
+  const allowedOrigins = env.CORS_ORIGIN.split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+
   app.use(
     cors({
-      origin: env.CORS_ORIGIN,
+      origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
       credentials: true,
     }),
   )

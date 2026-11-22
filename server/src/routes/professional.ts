@@ -14,10 +14,31 @@ import {
   deleteDocumentHandler,
 } from "../controllers/professionalAuthController"
 import {
+  getProfessionalDashboardHandler,
+  getProfessionalPatientsHandler,
+  getProfessionalPatientDetailHandler,
+  verifyPatientHealthProfileHandler,
+  getProfessionalAppointmentsHandler,
+  updateProfessionalAppointmentStatusHandler,
+  completeConsultationHandler,
+  getProfessionalComplaintsHandler,
+  updateProfessionalComplaintHandler,
+  getProfessionalClinicalRecordsHandler,
+  createProfessionalClinicalRecordHandler,
+  getProfessionalPrescriptionsHandler,
+  createProfessionalPrescriptionHandler,
+  updateProfessionalPrescriptionStatusHandler,
+  getProfessionalEmergenciesHandler,
+  accessProfessionalEmergencyHandler,
+  respondProfessionalEmergencyHandler,
+  resolveProfessionalEmergencyHandler,
+} from "../controllers/professionalClinicalController"
+import {
   authenticateProfessional,
   requireVerifiedProfessional,
 } from "../middleware/authenticateProfessional"
 import { authenticateAdmin } from "../middleware/authenticateAdmin"
+import { profCsrfProtection } from "../middleware/csrf"
 import { loginRateLimiter } from "../middleware/rateLimiter"
 import { validateBody } from "../middleware/validate"
 import {
@@ -27,6 +48,17 @@ import {
   reviewVerificationSchema,
   createCredentialDocumentSchema,
 } from "../validation/professional"
+import {
+  updateProfessionalAppointmentStatusSchema,
+  completeConsultationSchema,
+  updateProfessionalComplaintSchema,
+  professionalCreateClinicalRecordSchema,
+  professionalCreatePrescriptionSchema,
+  updatePrescriptionStatusSchema,
+  professionalEmergencyAccessSchema,
+  professionalEmergencyRespondSchema,
+  professionalEmergencyResolveSchema,
+} from "../validation/professionalClinical"
 import {
   PROF_CSRF_COOKIE_NAME,
   getProfCsrfCookieOptions,
@@ -97,6 +129,147 @@ export function createProfessionalRouter(): Router {
     authenticateProfessional,
     requireVerifiedProfessional,
     testClinicalAccessHandler,
+  )
+
+  // Dashboard Summary
+  router.get(
+    "/dashboard",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalDashboardHandler,
+  )
+
+  // Patient Lookup, Clinical Dossier & Health Profile Verification (Rule A)
+  router.get(
+    "/patients",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalPatientsHandler,
+  )
+  router.get(
+    "/patients/:patientId",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalPatientDetailHandler,
+  )
+  router.post(
+    "/patients/:patientId/verify-health-profile",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    verifyPatientHealthProfileHandler,
+  )
+
+  // Appointments & Consultations
+  router.get(
+    "/appointments",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalAppointmentsHandler,
+  )
+  router.patch(
+    "/appointments/:id/status",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(updateProfessionalAppointmentStatusSchema),
+    updateProfessionalAppointmentStatusHandler,
+  )
+  router.post(
+    "/appointments/:id/complete",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(completeConsultationSchema),
+    completeConsultationHandler,
+  )
+
+  // Complaint Queue & Triage
+  router.get(
+    "/complaints",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalComplaintsHandler,
+  )
+  router.patch(
+    "/complaints/:id",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(updateProfessionalComplaintSchema),
+    updateProfessionalComplaintHandler,
+  )
+
+  // Clinical Records Authoring (Rule A: Clinically Verified)
+  router.get(
+    "/clinical-records",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalClinicalRecordsHandler,
+  )
+  router.post(
+    "/clinical-records",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(professionalCreateClinicalRecordSchema),
+    createProfessionalClinicalRecordHandler,
+  )
+
+  // Prescriptions Issuance & Management
+  router.get(
+    "/prescriptions",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalPrescriptionsHandler,
+  )
+  router.post(
+    "/prescriptions",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(professionalCreatePrescriptionSchema),
+    createProfessionalPrescriptionHandler,
+  )
+  router.patch(
+    "/prescriptions/:id/status",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(updatePrescriptionStatusSchema),
+    updateProfessionalPrescriptionStatusHandler,
+  )
+
+  // Emergency Break-Glass Response (Rule C: Relationship Bypass + Immutable Audit)
+  router.get(
+    "/emergencies",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    getProfessionalEmergenciesHandler,
+  )
+  router.post(
+    "/emergencies/:caseNumber/access",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(professionalEmergencyAccessSchema),
+    accessProfessionalEmergencyHandler,
+  )
+  router.post(
+    "/emergencies/:caseNumber/respond",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(professionalEmergencyRespondSchema),
+    respondProfessionalEmergencyHandler,
+  )
+  router.post(
+    "/emergencies/:caseNumber/resolve",
+    authenticateProfessional,
+    requireVerifiedProfessional,
+    profCsrfProtection,
+    validateBody(professionalEmergencyResolveSchema),
+    resolveProfessionalEmergencyHandler,
   )
 
   // ─── Administrator Verification Review Endpoints ───────────────────────────────

@@ -15,8 +15,8 @@ import {
   hashSessionToken,
 } from "../utils/session"
 import { PROF_SESSION_TTL_MS } from "../utils/professionalSession"
+import type { Professional } from "../generated/prisma/client"
 import {
-  Professional,
   ProfessionalCategory,
   ProfessionalVerificationStatus,
   ProfessionalAccountStatus,

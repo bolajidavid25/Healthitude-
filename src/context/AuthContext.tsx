@@ -113,12 +113,16 @@ function formatProfessional(prof: ProfessionalItem): ContextUser {
   const lastName = prof.lastName || ""
   const fullName = [firstName, lastName].filter(Boolean).join(" ") || "Doctor"
   const initials = ((firstName[0] || "D") + (lastName[0] || "R")).toUpperCase()
-  const role: Role = "doctor"
+  const cat = String(prof.category || "DOCTOR").toUpperCase()
+  const role: Role =
+    cat === "NURSE" ? "nurse" : cat === "PHARMACIST" ? "pharmacist" : "doctor"
+  const prefix =
+    role === "nurse" ? "Nurse" : role === "pharmacist" ? "Pharm." : "Dr."
 
   return {
     id: prof.id,
     role,
-    name: `Dr. ${fullName}`,
+    name: `${prefix} ${fullName}`,
     firstName,
     lastName,
     email: prof.email,
@@ -134,15 +138,19 @@ function formatProfessional(prof: ProfessionalItem): ContextUser {
 }
 
 function formatAdmin(admin: AdministratorItem, scope?: string): ContextUser {
-  const parts = (admin.name || "Admin").split(" ")
-  const firstName = parts[0] || "Admin"
-  const lastName = parts.slice(1).join(" ") || ""
+  const fullName =
+    admin.name ||
+    [admin.firstName, admin.lastName].filter(Boolean).join(" ").trim() ||
+    "Administrator"
+  const parts = fullName.split(" ")
+  const firstName = admin.firstName || parts[0] || "Admin"
+  const lastName = admin.lastName || parts.slice(1).join(" ") || ""
   const initials = ((firstName[0] || "A") + (lastName[0] || "D")).toUpperCase()
 
   return {
     id: admin.id,
     role: "admin",
-    name: admin.name || "Sylvia Yeboah",
+    name: fullName,
     firstName,
     lastName,
     email: admin.email,
@@ -197,8 +205,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 3. Probe administrator session
       try {
         const adminRes = await api.admin.me()
-        if (adminRes?.data?.admin) {
-          const formatted = formatAdmin(adminRes.data.admin)
+        const adminObj =
+          (adminRes?.data as any)?.administrator || adminRes?.data?.admin
+        if (adminObj) {
+          const formatted = formatAdmin(adminObj)
           setUser(formatted)
           setOnboardingStatus(null)
           return

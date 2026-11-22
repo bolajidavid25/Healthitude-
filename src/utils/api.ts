@@ -565,7 +565,11 @@ export type ProfessionalVerificationStatusType =
   | "PENDING"
   | "UNDER_REVIEW"
   | "VERIFIED"
+  | "VERIFIED_WITH_RESTRICTIONS"
   | "REJECTED"
+  | "EXPIRED"
+  | "SUSPENDED"
+  | "REVOKED"
 
 export type ProfessionalAccountStatusType =
   | "ACTIVE"
@@ -615,11 +619,14 @@ export interface ProfessionalLoginPayload {
 
 export interface AdministratorItem {
   id: string
-  adminId: string
-  name: string
+  adminId?: string
+  name?: string
+  firstName?: string
+  lastName?: string
   email: string
   role: string
   status: string
+  department?: string | null
   lastLoginAt?: string | null
 }
 
@@ -629,9 +636,19 @@ export interface AdminLoginPayload {
 }
 
 export interface AdminReviewPayload {
-  action: "APPROVE" | "REJECT" | "REQUEST_INFO"
-  rejectionReason?: string
-  reviewNotes?: string
+  action:
+    | "START_REVIEW"
+    | "UNDER_REVIEW"
+    | "VERIFY"
+    | "VERIFY_WITH_RESTRICTIONS"
+    | "REJECT"
+    | "SUSPEND"
+    | "EXPIRE"
+    | "REVOKE"
+    | "REINSTATE"
+  reason?: string
+  restrictions?: string
+  notes?: string
 }
 
 // -----------------------------------------------------------------------------
@@ -1672,6 +1689,421 @@ export const api = {
           verificationStatus: string
         }
       }>("/api/professional/clinical-access-probe")
+    },
+
+    // Verified Professional Clinical Operations (Doctor <-> Patient Connection)
+    async getDashboard() {
+      const res = await fetchApi<{
+        status: string
+        data: {
+          professional: {
+            id: string
+            displayName: string
+            firstName: string
+            lastName: string
+            category: string
+            profession: string
+            specialty: string
+            facility: string
+            licenceNumber: string
+            licenceExpiry: string
+            daysUntilLicenceExpiry: number
+            verificationStatus: ProfessionalVerificationStatusType
+            verifiedAt: string | null
+            restrictions: string | null
+          }
+          metrics: {
+            todayAppointmentsCount: number
+            upcomingAppointmentsCount: number
+            urgentComplaintsCount: number
+            completedTodayCount: number
+            pendingReviewsCount: number
+            activeEmergenciesCount: number
+            connectedPatientsCount: number
+          }
+        }
+      }>("/api/professional/dashboard")
+      return res.data
+    },
+
+    async getPatients(search?: string) {
+      const qs = search ? `?search=${encodeURIComponent(search)}` : ""
+      const res = await fetchApi<{
+        status: string
+        data: {
+          patients: Array<{
+            id: string
+            name: string
+            firstName: string
+            lastName: string
+            initials: string
+            email: string
+            phoneNumber: string
+            sex: string
+            age: number
+            dateOfBirth: string
+            bloodGroup: string
+            genotype: string
+            allergies: string
+            conditions: string
+            currentMedications: string
+            clinicallyVerified: boolean
+            category: string
+            isConnected: boolean
+          }>
+        }
+      }>(`/api/professional/patients${qs}`)
+      return res.data.patients
+    },
+
+    async getPatientDetail(patientId: string) {
+      const res = await fetchApi<{
+        status: string
+        data: any
+      }>(`/api/professional/patients/${patientId}`)
+      return res.data
+    },
+
+    async verifyPatientHealthProfile(patientId: string) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>(`/api/professional/patients/${patientId}/verify-health-profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      })
+      return res.data
+    },
+
+    async getAppointments(params?: {
+      tab?: "today" | "upcoming" | "completed" | "cancelled" | "all"
+      status?: AppointmentStatusType
+      date?: string
+    }) {
+      const sp = new URLSearchParams()
+      if (params?.tab) sp.set("tab", params.tab)
+      if (params?.status) sp.set("status", params.status)
+      if (params?.date) sp.set("date", params.date)
+      const qs = sp.toString() ? `?${sp.toString()}` : ""
+      const res = await fetchApi<{
+        status: string
+        data: {
+          appointments: Array<{
+            id: string
+            uuid: string
+            appointmentNumber: string
+            patientId: string
+            patientName: string
+            initials: string
+            age: number
+            sex: string
+            date: string
+            rawDate: string
+            time: string
+            type: string
+            reason: string
+            status: AppointmentStatusType
+            department?: string | null
+            symptoms: string[]
+            rawSymptoms: string
+            duration: string
+            severity: string
+            notes?: string | null
+            documents: string[]
+            referralDoc?: string | null
+            conditions: string
+            allergies: string
+            medications: string
+            bloodGroup: string
+            clinicallyVerified: boolean
+            createdAt: string
+            updatedAt: string
+          }>
+        }
+      }>(`/api/professional/appointments${qs}`)
+      return res.data.appointments
+    },
+
+    async updateAppointmentStatus(
+      idOrNumber: string,
+      payload: {
+        status: "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW"
+        notes?: string
+        cancellationReason?: string
+      },
+    ) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>(`/api/professional/appointments/${idOrNumber}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      return res.data
+    },
+
+    async completeConsultation(
+      idOrNumber: string,
+      payload: {
+        consultationNotes: string
+        diagnoses?: string[]
+        vitalSigns?: string
+        recommendations?: string
+        followUp?: "none" | "follow1week" | "follow2weeks" | "follow1month" | "custom"
+        followUpDate?: string
+        prescriptions?: Array<{
+          medicine: string
+          dose: string
+          frequency: string
+          duration: string
+          route?: string
+          instructions?: string
+        }>
+      },
+    ) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: {
+          appointment: any
+          clinicalRecords: any[]
+          prescriptions: any[]
+        }
+      }>(`/api/professional/appointments/${idOrNumber}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      return res.data
+    },
+
+    async getComplaints(params?: {
+      status?: ComplaintStatusType
+      severity?: ComplaintSeverityType
+      assignedToMe?: boolean
+    }) {
+      const sp = new URLSearchParams()
+      if (params?.status) sp.set("status", params.status)
+      if (params?.severity) sp.set("severity", params.severity)
+      if (params?.assignedToMe) sp.set("assignedToMe", "true")
+      const qs = sp.toString() ? `?${sp.toString()}` : ""
+      const res = await fetchApi<{
+        status: string
+        data: {
+          complaints: Array<{
+            id: string
+            referenceId: string
+            patientId: string
+            patientName: string
+            patientAge: number
+            patientSex: string
+            symptoms: string
+            severity: ComplaintSeverityType
+            duration?: string | null
+            status: ComplaintStatusType
+            priority: "URGENT" | "ROUTINE"
+            assignedDoctor?: string | null
+            clinicalNotes?: string | null
+            resolvedAt?: string | null
+            createdAt: string
+            updatedAt: string
+          }>
+        }
+      }>(`/api/professional/complaints${qs}`)
+      return res.data.complaints
+    },
+
+    async updateComplaint(
+      idOrRef: string,
+      payload: {
+        status: "UNDER_REVIEW" | "REFERRED_TO_SPECIALIST" | "RESOLVED"
+        clinicalNotes?: string
+      },
+    ) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>(`/api/professional/complaints/${idOrRef}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      return res.data
+    },
+
+    async getClinicalRecords(patientId?: string) {
+      const qs = patientId ? `?patientId=${encodeURIComponent(patientId)}` : ""
+      const res = await fetchApi<{
+        status: string
+        data: {
+          records: Array<{
+            id: string
+            recordNumber: string
+            patientId: string
+            patientName: string
+            type: ClinicalRecordTypeValue
+            content: string
+            author: string
+            authorRole?: string | null
+            verified: boolean
+            verifiedAt: string
+            createdAt: string
+          }>
+        }
+      }>(`/api/professional/clinical-records${qs}`)
+      return res.data.records
+    },
+
+    async createClinicalRecord(payload: {
+      patientId: string
+      type: ClinicalRecordTypeValue
+      content: string
+      attachmentName?: string
+      attachmentUrl?: string
+      metadata?: Record<string, any>
+    }) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>("/api/professional/clinical-records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      return res.data
+    },
+
+    async getPrescriptions(patientId?: string) {
+      const qs = patientId ? `?patientId=${encodeURIComponent(patientId)}` : ""
+      const res = await fetchApi<{
+        status: string
+        data: {
+          prescriptions: Array<{
+            id: string
+            prescriptionNumber: string
+            patientId: string
+            patientName: string
+            medicine: string
+            dose: string
+            frequency: string
+            duration: string
+            prescriber: string
+            status: PrescriptionStatusType
+            instructions?: string | null
+            startDate: string
+            endDate?: string | null
+            createdAt: string
+          }>
+        }
+      }>(`/api/professional/prescriptions${qs}`)
+      return res.data.prescriptions
+    },
+
+    async createPrescription(payload: {
+      patientId: string
+      medicine: string
+      dose: string
+      frequency: string
+      duration: string
+      route?: string
+      instructions?: string
+    }) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>("/api/professional/prescriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      return res.data
+    },
+
+    async updatePrescriptionStatus(
+      idOrNumber: string,
+      status: PrescriptionStatusType,
+    ) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>(`/api/professional/prescriptions/${idOrNumber}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      })
+      return res.data
+    },
+
+    async getEmergencies() {
+      const res = await fetchApi<{
+        status: string
+        data: {
+          emergencies: Array<{
+            id: string
+            caseNumber: string
+            patientId: string
+            patientName: string
+            patientAge: number
+            patientSex: string
+            patientPhone: string
+            status: "ACTIVE" | "RESPONDED" | "RESOLVED" | "CANCELLED"
+            reason?: string | null
+            responderName?: string | null
+            responderId?: string | null
+            responderRole?: string | null
+            respondedAt?: string | null
+            snapshot?: any
+            createdAt: string
+          }>
+        }
+      }>("/api/professional/emergencies")
+      return res.data.emergencies
+    },
+
+    async accessEmergencyRecord(caseNumber: string, justification: string) {
+      const res = await fetchApi<{
+        status: string
+        data: any
+      }>(`/api/professional/emergencies/${caseNumber}/access`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ justification }),
+      })
+      return res.data
+    },
+
+    async respondEmergency(caseNumber: string, notes?: string) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>(`/api/professional/emergencies/${caseNumber}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes }),
+      })
+      return res.data
+    },
+
+    async resolveEmergency(caseNumber: string, resolutionNotes: string) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>(`/api/professional/emergencies/${caseNumber}/resolve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resolutionNotes }),
+      })
+      return res.data
     },
   },
 

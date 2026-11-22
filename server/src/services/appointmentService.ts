@@ -1,6 +1,11 @@
 import { prisma } from "../config/prisma"
 import { AppError } from "../errors/AppError"
-import { AppointmentStatus, NotificationType } from "../generated/prisma/enums"
+import {
+  AppointmentStatus,
+  NotificationType,
+  ProfessionalAccountStatus,
+  ProfessionalVerificationStatus,
+} from "../generated/prisma/enums"
 import { createNotification } from "./notificationService"
 import {
   CreateAppointmentInput,
@@ -167,6 +172,7 @@ export async function getPatientAppointmentById(
 
 /**
  * Books/creates a new appointment for the patient.
+ * Automatically links to a real verified Professional in PostgreSQL when matched by doctorId or doctorName.
  */
 export async function createAppointment(
   patientId: string,
@@ -175,13 +181,59 @@ export async function createAppointment(
   const appointmentNumber = await generateAppointmentNumber()
   const dateObj = new Date(`${input.date}T00:00:00.000Z`)
 
+  // Resolve real verified Professional in PostgreSQL so appointment connects to the doctor's portal
+  let resolvedDoctorId = input.doctorId || null
+  let resolvedDoctorName = input.doctorName
+  let resolvedDepartment = input.department
+
+  try {
+    const verifiedStatuses = [
+      ProfessionalVerificationStatus.VERIFIED,
+      ProfessionalVerificationStatus.VERIFIED_WITH_RESTRICTIONS,
+    ]
+    let matchedProf = null
+
+    if (input.doctorId) {
+      matchedProf = await prisma.professional.findFirst({
+        where: {
+          id: input.doctorId,
+          verificationStatus: { in: verifiedStatuses },
+          accountStatus: ProfessionalAccountStatus.ACTIVE,
+        },
+      })
+    }
+
+    if (!matchedProf && input.doctorName) {
+      const cleaned = input.doctorName.replace(/^dr\.?\s+/i, "").trim()
+      const parts = cleaned.split(/\s+/)
+      if (parts.length >= 2) {
+        matchedProf = await prisma.professional.findFirst({
+          where: {
+            firstName: { equals: parts[0], mode: "insensitive" },
+            lastName: { equals: parts[parts.length - 1], mode: "insensitive" },
+            verificationStatus: { in: verifiedStatuses },
+            accountStatus: ProfessionalAccountStatus.ACTIVE,
+          },
+        })
+      }
+    }
+
+    if (matchedProf) {
+      resolvedDoctorId = matchedProf.id
+      resolvedDoctorName = `Dr. ${matchedProf.firstName} ${matchedProf.lastName}`.trim()
+      resolvedDepartment = resolvedDepartment || matchedProf.specialty
+    }
+  } catch {
+    // Keep provided doctorId/doctorName if lookup fails
+  }
+
   const apt = await prisma.appointment.create({
     data: {
       appointmentNumber,
       patientId,
-      doctorName: input.doctorName,
-      doctorId: input.doctorId,
-      department: input.department,
+      doctorName: resolvedDoctorName,
+      doctorId: resolvedDoctorId,
+      department: resolvedDepartment,
       type: input.type || "General Consultation",
       reason: input.reason,
       date: dateObj,
@@ -202,7 +254,7 @@ export async function createAppointment(
     userId: patientId,
     type: NotificationType.APPOINTMENT_CONFIRMED,
     title: "Appointment Confirmed",
-    message: `Your appointment with ${input.doctorName} on ${formatDisplayDate(dateObj)} at ${input.time} has been confirmed.`,
+    message: `Your appointment with ${resolvedDoctorName} on ${formatDisplayDate(dateObj)} at ${input.time} has been confirmed.`,
     eventId: `evt_apt_create_${apt.appointmentNumber}`,
     referenceType: "appointment",
     referenceId: apt.appointmentNumber,

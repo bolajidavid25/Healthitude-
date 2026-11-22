@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Users,
   ShieldCheck,
@@ -8,7 +8,9 @@ import {
   ChevronDown,
   ArrowUp,
   Plus,
+  RefreshCw,
 } from "lucide-react"
+import { api, type ProfessionalItem } from "@/utils/api"
 
 const BLUE = "#1a3fcf"
 
@@ -461,55 +463,217 @@ function PricingAdmin() {
   )
 }
 
-export default function AdminPanel() {
-  const [view, setView] = useState<AdminView>("users")
-  const [selectedPro, setSelectedPro] =
-    useState<typeof professionals[0] | null>(null)
+function statusBadgeColor(
+  status: string,
+): "green" | "blue" | "yellow" | "red" | "gray" {
+  if (status === "VERIFIED") return "green"
+  if (status === "VERIFIED_WITH_RESTRICTIONS") return "blue"
+  if (status === "UNDER_REVIEW" || status === "PENDING") return "yellow"
+  if (status === "REJECTED" || status === "SUSPENDED" || status === "REVOKED")
+    return "red"
+  return "gray"
+}
 
-  const navItems: { id: AdminView label: string icon: React.ReactNode }[] = [
-    {
-      id: "users",
-      label: "User Management",
-      icon: <Users className="w-4 h-4" />,
-    },
+export default function AdminPanel() {
+  const [view, setView] = useState<AdminView>("verification")
+  const [profList, setProfList] = useState<ProfessionalItem[]>([])
+  const [auditList, setAuditList] = useState<any[]>([])
+  const [selectedProId, setSelectedProId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [actionMsg, setActionMsg] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  )
+  const [notes, setNotes] = useState("")
+  const [reason, setReason] = useState("")
+  const [restrictions, setRestrictions] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [userSearch, setUserSearch] = useState("")
+
+  const loadAdminData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [profsRes, auditRes] = await Promise.all([
+        api.admin.getProfessionals(),
+        api.admin.getAuditLogs({ limit: 50 }),
+      ])
+      const loadedProfs = profsRes?.data?.professionals || []
+      const loadedLogs =
+        auditRes?.data?.logs || (auditRes?.data as any)?.auditLogs || []
+      setProfList(loadedProfs)
+      setAuditList(loadedLogs)
+      if (!selectedProId && loadedProfs.length > 0) {
+        const firstPending = loadedProfs.find(
+          (p) =>
+            p.verificationStatus === "PENDING" ||
+            p.verificationStatus === "UNDER_REVIEW",
+        )
+        setSelectedProId((firstPending || loadedProfs[0]).id)
+      }
+    } catch (err: any) {
+      setError(
+        err?.message ||
+          "Unable to load administrator data. Please ensure you are signed in as an administrator.",
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedProId])
+
+  useEffect(() => {
+    loadAdminData()
+  }, [loadAdminData])
+
+  const selectedPro =
+    profList.find((p) => p.id === selectedProId) || profList[0] || null
+
+  const handleReviewAction = async (
+    action: "VERIFY" | "VERIFY_WITH_RESTRICTIONS" | "REJECT" | "SUSPEND" | "REINSTATE",
+  ) => {
+    if (!selectedPro) return
+    setActionMsg(null)
+
+    if (
+      (action === "REJECT" || action === "SUSPEND") &&
+      reason.trim().length < 3
+    ) {
+      setActionMsg({
+        ok: false,
+        text: "Please enter a justification reason in the reason field before rejecting or suspending.",
+      })
+      return
+    }
+
+    if (action === "VERIFY_WITH_RESTRICTIONS" && restrictions.trim().length < 3) {
+      setActionMsg({
+        ok: false,
+        text: "Please specify the practice restrictions before approving with restrictions.",
+      })
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      // State machine requires PENDING -> UNDER_REVIEW before VERIFY / VERIFY_WITH_RESTRICTIONS
+      if (
+        selectedPro.verificationStatus === "PENDING" &&
+        (action === "VERIFY" || action === "VERIFY_WITH_RESTRICTIONS")
+      ) {
+        await api.admin.reviewProfessional(selectedPro.id, {
+          action: "START_REVIEW",
+          notes: notes.trim() || "Started administrator credential review.",
+        })
+      }
+
+      const res = await api.admin.reviewProfessional(selectedPro.id, {
+        action,
+        reason: reason.trim() || undefined,
+        restrictions: restrictions.trim() || undefined,
+        notes: notes.trim() || undefined,
+      })
+
+      setActionMsg({
+        ok: true,
+        text:
+          res.message ||
+          `Updated Dr. ${selectedPro.firstName} ${selectedPro.lastName} successfully.`,
+      })
+      setNotes("")
+      setReason("")
+      setRestrictions("")
+      await loadAdminData()
+    } catch (err: any) {
+      setActionMsg({
+        ok: false,
+        text: err?.message || "Failed to submit verification decision.",
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const pendingCount = profList.filter(
+    (p) =>
+      p.verificationStatus === "PENDING" ||
+      p.verificationStatus === "UNDER_REVIEW",
+  ).length
+  const verifiedCount = profList.filter(
+    (p) =>
+      p.verificationStatus === "VERIFIED" ||
+      p.verificationStatus === "VERIFIED_WITH_RESTRICTIONS",
+  ).length
+
+  const filteredProfs = profList.filter((p) => {
+    if (!userSearch.trim()) return true
+    const q = userSearch.toLowerCase()
+    return (
+      `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) ||
+      p.email.toLowerCase().includes(q) ||
+      (p.specialty || "").toLowerCase().includes(q) ||
+      p.licenceNumber.toLowerCase().includes(q)
+    )
+  })
+
+  const navItems: { id: AdminView; label: string; icon: React.ReactNode }[] = [
     {
       id: "verification",
-      label: "Verification Review",
+      label: `Verification Review${pendingCount > 0 ? ` (${pendingCount})` : ""}`,
       icon: <ShieldCheck className="w-4 h-4" />,
+    },
+    {
+      id: "users",
+      label: "Professionals Directory",
+      icon: <Users className="w-4 h-4" />,
     },
     {
       id: "pricing",
       label: "Pricing & Categories",
       icon: <CreditCard className="w-4 h-4" />,
     },
-    { id: "audit", label: "Audit Log", icon: <FileText className="w-4 h-4" /> },
+    {
+      id: "audit",
+      label: `Audit Log (${auditList.length})`,
+      icon: <FileText className="w-4 h-4" />,
+    },
   ]
 
   return (
     <div>
+      {error && (
+        <div className="mb-5 p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={loadAdminData}
+            className="text-xs font-semibold text-red-700 underline cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
           {
-            label: "Total Users",
-            value: "18,500",
+            label: "Total Professionals",
+            value: loading ? "…" : String(profList.length),
             icon: <Users className="w-4 h-4 text-blue-600" />,
           },
           {
             label: "Pending Verifications",
-            value: "12",
+            value: loading ? "…" : String(pendingCount),
             icon: <ShieldCheck className="w-4 h-4 text-amber-600" />,
-            warn: true,
+            warn: pendingCount > 0,
           },
           {
-            label: "Active Professionals",
-            value: "2,401",
+            label: "Verified Professionals",
+            value: loading ? "…" : String(verifiedCount),
             icon: <Users className="w-4 h-4 text-blue-600" />,
           },
           {
-            label: "Open Audit Items",
-            value: "3",
+            label: "Audit Log Entries",
+            value: loading ? "…" : String(auditList.length),
             icon: <FileText className="w-4 h-4 text-amber-600" />,
-            warn: true,
           },
         ].map((s) => (
           <div
@@ -561,195 +725,290 @@ export default function AdminPanel() {
 
       {view === "users" && (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-800">All Users</h3>
-            <input
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
-              placeholder="Search users..."
-            />
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="font-semibold text-gray-800">
+              Registered Healthcare Professionals ({filteredProfs.length})
+            </h3>
+            <div className="flex items-center gap-2">
+              <input
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-56"
+                placeholder="Search name, email, licence..."
+              />
+              <button
+                onClick={loadAdminData}
+                className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer"
+                title="Refresh"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left">
-                {[
-                  "Name",
-                  "Role",
-                  "Category",
-                  "Status",
-                  "Joined",
-                  "Actions",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {[
-                {
-                  name: "Ama Mensah",
-                  role: "Patient",
-                  category: "NHIS",
-                  status: "Active",
-                  joined: "Mar 2024",
-                },
-                {
-                  name: "Dr. Kofi Boateng",
-                  role: "Doctor",
-                  category: "—",
-                  status: "Active",
-                  joined: "Jan 2022",
-                },
-                {
-                  name: "Kweku Osei",
-                  role: "Patient",
-                  category: "General",
-                  status: "Active",
-                  joined: "Jun 2025",
-                },
-                {
-                  name: "Nurse Afua Darko",
-                  role: "Nurse",
-                  category: "—",
-                  status: "Active",
-                  joined: "Aug 2023",
-                },
-                {
-                  name: "Abena Frempong",
-                  role: "Patient",
-                  category: "Student",
-                  status: "Active",
-                  joined: "Sep 2026",
-                },
-              ].map((u) => (
-                <tr key={u.name} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-800">
-                    {u.name}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{u.role}</td>
-                  <td className="px-4 py-3 text-gray-500">{u.category}</td>
-                  <td className="px-4 py-3">
-                    <Badge label={u.status} color="green" />
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{u.joined}</td>
-                  <td className="px-4 py-3">
-                    <button className="text-blue-600 hover:underline text-xs mr-3">
-                      View
-                    </button>
-                    <button className="text-red-500 hover:underline text-xs">
-                      Suspend
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left">
+                  {[
+                    "Name",
+                    "Specialty",
+                    "Licence",
+                    "Verification",
+                    "Joined",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredProfs.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-8 text-center text-gray-400"
+                    >
+                      No professionals found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProfs.map((u) => (
+                    <tr
+                      key={u.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-800">
+                          Dr. {u.firstName} {u.lastName}
+                        </p>
+                        <p className="text-xs text-gray-400">{u.email}</p>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {u.specialty || "General Practice"}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-500">
+                        {u.licenceNumber}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          label={u.verificationStatus.replace(/_/g, " ")}
+                          color={statusBadgeColor(u.verificationStatus)}
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => {
+                            setSelectedProId(u.id)
+                            setView("verification")
+                          }}
+                          className="text-blue-600 hover:underline text-xs font-medium cursor-pointer"
+                        >
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {view === "verification" && (
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <h3 className="font-display text-lg font-bold text-gray-900">
-              Verification Queue
-            </h3>
-            {professionals.map((p) => (
-              <div
-                key={p.name}
-                onClick={() => setSelectedPro(p)}
-                className={`bg-white rounded-xl border p-4 cursor-pointer transition-all hover:border-blue-300 ${
-                  selectedPro?.name === p.name
-                    ? "border-blue-400"
-                    : "border-gray-100"
-                }`}
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-lg font-bold text-gray-900">
+                Verification Queue ({profList.length})
+              </h3>
+              <button
+                onClick={loadAdminData}
+                className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-gray-800">{p.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {p.profession} · {p.specialty}
-                    </p>
-                    <p className="text-xs font-mono text-gray-400 mt-1">
-                      {p.licence}
-                    </p>
-                  </div>
-                  <Badge
-                    label={p.status}
-                    color={p.status === "UNDER_REVIEW" ? "yellow" : "gray"}
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-2">
-                  Submitted {p.submitted}
-                </p>
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh
+              </button>
+            </div>
+
+            {profList.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-400 text-sm">
+                No professionals registered yet.
               </div>
-            ))}
+            ) : (
+              profList.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    setSelectedProId(p.id)
+                    setActionMsg(null)
+                  }}
+                  className={`bg-white rounded-xl border p-4 cursor-pointer transition-all hover:border-blue-300 ${
+                    selectedPro?.id === p.id
+                      ? "border-blue-400 shadow-sm"
+                      : "border-gray-100"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        Dr. {p.firstName} {p.lastName}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {p.category} · {p.specialty || "General Practice"} ·{" "}
+                        {p.facility || "—"}
+                      </p>
+                      <p className="text-xs font-mono text-gray-400 mt-1">
+                        {p.licenceNumber}
+                      </p>
+                    </div>
+                    <Badge
+                      label={p.verificationStatus.replace(/_/g, " ")}
+                      color={statusBadgeColor(p.verificationStatus)}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Registered {new Date(p.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
 
           {selectedPro ? (
             <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
-              <h3 className="font-display text-lg font-bold text-gray-900">
-                Review: {selectedPro.name}
-              </h3>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-display text-lg font-bold text-gray-900">
+                    Review: Dr. {selectedPro.firstName} {selectedPro.lastName}
+                  </h3>
+                  <p className="text-xs text-gray-500">{selectedPro.email}</p>
+                </div>
+                <Badge
+                  label={selectedPro.verificationStatus.replace(/_/g, " ")}
+                  color={statusBadgeColor(selectedPro.verificationStatus)}
+                />
+              </div>
+
+              {actionMsg && (
+                <div
+                  className={`p-3 rounded-lg text-xs border ${
+                    actionMsg.ok
+                      ? "bg-green-50 border-green-200 text-green-800"
+                      : "bg-red-50 border-red-200 text-red-700"
+                  }`}
+                >
+                  {actionMsg.text}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
-                  { label: "Profession", value: selectedPro.profession },
-                  { label: "Specialty", value: selectedPro.specialty },
-                  { label: "Licence", value: selectedPro.licence },
-                  { label: "Submitted", value: selectedPro.submitted },
+                  { label: "Category", value: selectedPro.category },
+                  {
+                    label: "Specialty",
+                    value: selectedPro.specialty || "General Practice",
+                  },
+                  { label: "Licence", value: selectedPro.licenceNumber },
+                  {
+                    label: "Regulatory Body",
+                    value: selectedPro.regulatoryBody || "—",
+                  },
+                  { label: "Facility", value: selectedPro.facility || "—" },
+                  {
+                    label: "Licence Expiry",
+                    value: selectedPro.licenceExpiry
+                      ? new Date(selectedPro.licenceExpiry).toLocaleDateString()
+                      : "—",
+                  },
                 ].map((item) => (
                   <div key={item.label} className="p-3 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-500">{item.label}</p>
-                    <p className="font-medium text-gray-800 mt-0.5">
+                    <p className="font-medium text-gray-800 mt-0.5 text-xs">
                       {item.value}
                     </p>
                   </div>
                 ))}
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Evidence documents
-                </p>
-                <div className="space-y-2">
-                  {[
-                    "National ID",
-                    "Professional Licence",
-                    "Qualification Certificate",
-                  ].map((doc) => (
-                    <div
-                      key={doc}
-                      className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-200"
-                    >
-                      <span className="text-sm text-gray-600">{doc}</span>
-                      <button className="text-blue-600 text-xs hover:underline">
-                        View
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Reviewer notes
+                  Reviewer notes (optional)
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Add notes about this verification decision..."
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Restrictions (only for Restrict)
+                  </label>
+                  <input
+                    value={restrictions}
+                    onChange={(e) => setRestrictions(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs"
+                    placeholder="e.g. Telemedicine only"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Reason (required for Reject / Suspend)
+                  </label>
+                  <input
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs"
+                    placeholder="e.g. Unverifiable licence number"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-2">
-                <button className="py-2 rounded-none text-white text-sm font-medium bg-green-600 hover:bg-green-700 transition-colors">
-                  Verify
+                <button
+                  disabled={submitting}
+                  onClick={() => handleReviewAction("VERIFY")}
+                  className="py-2.5 rounded-none text-white text-sm font-medium bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {submitting ? "Saving..." : "Verify"}
                 </button>
-                <button className="py-2 rounded-none text-white text-sm font-medium bg-amber-500 hover:bg-amber-600 transition-colors">
+                <button
+                  disabled={submitting}
+                  onClick={() => handleReviewAction("VERIFY_WITH_RESTRICTIONS")}
+                  className="py-2.5 rounded-none text-white text-sm font-medium bg-amber-500 hover:bg-amber-600 transition-colors disabled:opacity-50 cursor-pointer"
+                >
                   Restrict
                 </button>
-                <button className="py-2 rounded-none text-white text-sm font-medium bg-red-600 hover:bg-red-700 transition-colors">
-                  Reject
+                <button
+                  disabled={submitting}
+                  onClick={() =>
+                    handleReviewAction(
+                      selectedPro.verificationStatus === "VERIFIED" ||
+                        selectedPro.verificationStatus ===
+                          "VERIFIED_WITH_RESTRICTIONS"
+                        ? "SUSPEND"
+                        : "REJECT",
+                    )
+                  }
+                  className="py-2.5 rounded-none text-white text-sm font-medium bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {selectedPro.verificationStatus === "VERIFIED" ||
+                  selectedPro.verificationStatus ===
+                    "VERIFIED_WITH_RESTRICTIONS"
+                    ? "Suspend"
+                    : "Reject"}
                 </button>
               </div>
             </div>
@@ -767,45 +1026,58 @@ export default function AdminPanel() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg font-bold text-gray-900">
-              Audit & Security Log
+              Audit & Security Log ({auditList.length})
             </h3>
-            <button className="btn-rise !px-4 !py-2 !text-sm text-white font-semibold">
-              Export
+            <button
+              onClick={loadAdminData}
+              className="btn-rise !px-4 !py-2 !text-sm text-white font-semibold"
+            >
+              Refresh
             </button>
           </div>
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="divide-y divide-gray-100">
-              {auditEvents.map((e, i) => (
-                <div
-                  key={i}
-                  className={`px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors ${
-                    e.severity === "high"
-                      ? "border-l-4 border-red-400"
-                      : e.severity === "warn"
-                        ? "border-l-4 border-amber-400"
-                        : ""
-                  }`}
-                >
-                  <div className="text-xs text-gray-400 font-mono min-w-[160px]">
-                    {e.time}
-                  </div>
-                  <div className="flex-1">
-                    <span className="font-medium text-gray-800 text-sm">
-                      {e.action.replace(/_/g, " ")}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-0.5">{e.target}</p>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    by <strong className="text-gray-700">{e.actor}</strong>
-                  </div>
-                  {e.severity !== "normal" && (
-                    <Badge
-                      label={e.severity === "high" ? "HIGH" : "WARNING"}
-                      color={e.severity === "high" ? "red" : "yellow"}
-                    />
-                  )}
+              {auditList.length === 0 ? (
+                <div className="px-5 py-8 text-center text-gray-400 text-sm">
+                  No administrative audit events recorded yet.
                 </div>
-              ))}
+              ) : (
+                auditList.map((e: any) => (
+                  <div
+                    key={e.id}
+                    className={`px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors ${
+                      e.severity === "high" || e.severity === "critical"
+                        ? "border-l-4 border-red-400"
+                        : ""
+                    }`}
+                  >
+                    <div className="text-xs text-gray-400 font-mono min-w-[160px]">
+                      {new Date(e.createdAt).toLocaleString()}
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-medium text-gray-800 text-sm">
+                        {String(e.action || "").replace(/_/g, " ")}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {e.targetName || e.targetType}
+                        {e.targetId ? ` · ${e.targetId}` : ""}
+                      </p>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      by{" "}
+                      <strong className="text-gray-700">
+                        {e.adminEmail || e.adminId}
+                      </strong>
+                    </div>
+                    {e.severity && e.severity !== "normal" && (
+                      <Badge
+                        label={String(e.severity).toUpperCase()}
+                        color="red"
+                      />
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
