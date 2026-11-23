@@ -131,7 +131,54 @@ export async function generateAngitiaHealthResponse(
     }
   }
 
-  // Format conversation history for Gemini API
+  // 1. Primary: Google AI Studio Interactions API (Standard for Gemini 3.8 Flash)
+  try {
+    const interController = new AbortController()
+    const interTimeout = setTimeout(() => interController.abort(), 12000)
+
+    const interRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/interactions?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        signal: interController.signal,
+        body: JSON.stringify({
+          model: preferredModel,
+          input: message,
+          system_instruction: SYSTEM_PROMPT,
+        }),
+      },
+    )
+
+    clearTimeout(interTimeout)
+
+    if (interRes.ok) {
+      const data = await interRes.json()
+      const steps = data.steps || []
+      for (const step of steps) {
+        if (step.content && Array.isArray(step.content)) {
+          for (const block of step.content) {
+            if (block.type === "text" && block.text) {
+              return { text: block.text.trim(), source: "gemini" }
+            }
+          }
+        }
+      }
+      if (typeof data.output === "string" && data.output.trim()) {
+        return { text: data.output.trim(), source: "gemini" }
+      }
+    } else {
+      const errText = await interRes.text()
+      console.warn(`[Angitia AI] Interactions API returned ${interRes.status}:`, errText)
+    }
+  } catch (err: any) {
+    console.warn("[Angitia AI] Interactions API error:", err?.message || err)
+  }
+
+  // 2. Secondary: Multi-model candidate loop using generateContent
   const contents = [
     ...history.slice(-8).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",

@@ -84,7 +84,7 @@ aiRouter.get("/status", (_req: Request, res: Response) => {
 
 /**
  * GET /api/ai/diagnostics
- * Safe diagnostic endpoint to see why Google Gemini responded or failed.
+ * Safe diagnostic endpoint to verify Google Gemini API response.
  */
 aiRouter.get("/diagnostics", async (_req: Request, res: Response) => {
   const rawKey =
@@ -102,40 +102,78 @@ aiRouter.get("/diagnostics", async (_req: Request, res: Response) => {
     return
   }
 
-  const requestedModel = typeof _req.query.model === "string" ? _req.query.model : undefined
+  const requestedModel =
+    typeof _req.query.model === "string" ? _req.query.model : undefined
   const model = requestedModel || "gemini-3.8-flash"
-  const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-    model,
-  )}:generateContent?key=${apiKey}`
 
+  // 1. Try modern Interactions API
+  let interactionsResult: any = null
   try {
-    const googleRes = await fetch(testUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
-      }),
-    })
-
-    const bodyText = await googleRes.text()
-    let parsedBody: any = bodyText
+    const interRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/interactions?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          model,
+          input: "Hello, reply in one sentence.",
+        }),
+      },
+    )
+    const text = await interRes.text()
     try {
-      parsedBody = JSON.parse(bodyText)
+      interactionsResult = {
+        httpStatus: interRes.status,
+        ok: interRes.ok,
+        body: JSON.parse(text),
+      }
     } catch {
-      // ignore
+      interactionsResult = { httpStatus: interRes.status, ok: interRes.ok, raw: text }
     }
-
-    res.status(200).json({
-      keyMasked: apiKey.slice(0, 6) + "..." + apiKey.slice(-4),
-      keyLength: apiKey.length,
-      modelTested: model,
-      googleHttpStatus: googleRes.status,
-      googleOk: googleRes.ok,
-      googleResponse: parsedBody,
-    })
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message || String(err),
-    })
+    interactionsResult = { error: err.message }
   }
+
+  // 2. Try legacy generateContent
+  let generateContentResult: any = null
+  try {
+    const genRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        model,
+      )}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: "Hello" }] }],
+        }),
+      },
+    )
+    const text = await genRes.text()
+    try {
+      generateContentResult = {
+        httpStatus: genRes.status,
+        ok: genRes.ok,
+        body: JSON.parse(text),
+      }
+    } catch {
+      generateContentResult = { httpStatus: genRes.status, ok: genRes.ok, raw: text }
+    }
+  } catch (err: any) {
+    generateContentResult = { error: err.message }
+  }
+
+  res.status(200).json({
+    keyMasked: apiKey.slice(0, 6) + "..." + apiKey.slice(-4),
+    keyLength: apiKey.length,
+    modelTested: model,
+    interactionsApi: interactionsResult,
+    generateContentApi: generateContentResult,
+  })
 })
