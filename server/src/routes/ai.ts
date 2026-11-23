@@ -54,9 +54,42 @@ aiRouter.post(
 )
 
 /**
- * GET /api/ai/status
- * Quick health-check for Angitia AI service.
+ * GET /api/ai/models
+ * Returns the exact models supported by the user's API key directly from Google.
  */
+aiRouter.get("/models", async (_req: Request, res: Response) => {
+  const rawKey =
+    process.env.ANGITIA ||
+    process.env.ANGITIA_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    ""
+  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "")
+
+  if (!apiKey) {
+    res.status(200).json({ error: "No API key configured" })
+    return
+  }
+
+  try {
+    const listRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+      { headers: { "x-goog-api-key": apiKey } },
+    )
+    const data = await listRes.json()
+    const names = (data.models || []).map((m: any) => ({
+      name: m.name?.replace("models/", ""),
+      displayName: m.displayName,
+      supportedActions: m.supportedGenerationMethods,
+    }))
+    res.status(200).json({
+      status: listRes.status,
+      count: names.length,
+      models: names,
+    })
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+})
 aiRouter.get("/status", (_req: Request, res: Response) => {
   const rawKey =
     process.env.ANGITIA ||
