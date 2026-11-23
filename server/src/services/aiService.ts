@@ -217,16 +217,17 @@ export async function generateAngitiaHealthResponse(
     new Set([
       preferredModel,
       "gemini-3.8-flash",
+      "gemini-3.5-flash",
       "gemini-flash-latest",
       "gemini-3.1-flash-lite",
-      "gemini-2.5-flash-lite",
+      "gemini-2.5-flash",
     ]),
   )
 
   // 2. Primary: Google AI Studio Interactions API (Standard for Gemini 3.8 Flash)
   try {
     const interController = new AbortController()
-    const interTimeout = setTimeout(() => interController.abort(), 4000)
+    const interTimeout = setTimeout(() => interController.abort(), 12000)
 
     const interRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/interactions?key=${apiKey}`,
@@ -249,6 +250,9 @@ export async function generateAngitiaHealthResponse(
 
     if (interRes.ok) {
       const data = await interRes.json()
+      if (typeof data.output_text === "string" && data.output_text.trim()) {
+        return { text: data.output_text.trim(), source: "gemini" }
+      }
       const steps = data.steps || []
       for (const step of steps) {
         if (step.content && Array.isArray(step.content)) {
@@ -279,7 +283,7 @@ export async function generateAngitiaHealthResponse(
     },
   ]
 
-  let lastError = ""
+  const errors: string[] = []
   for (const modelName of candidateModels) {
     try {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
@@ -287,7 +291,7 @@ export async function generateAngitiaHealthResponse(
       )}:generateContent?key=${apiKey}`
 
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 8000)
+      const timeout = setTimeout(() => controller.abort(), 10000)
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -312,8 +316,7 @@ export async function generateAngitiaHealthResponse(
       clearTimeout(timeout)
 
       if (!response.ok) {
-        const errText = await response.text()
-        lastError = `Model ${modelName} returned status ${response.status}: ${errText}`
+        errors.push(`${modelName} (status ${response.status})`)
         continue
       }
 
@@ -328,13 +331,13 @@ export async function generateAngitiaHealthResponse(
         }
       }
     } catch (err: any) {
-      lastError = err?.message || String(err)
+      errors.push(`${modelName} (${err?.message || "timeout"})`)
       continue
     }
   }
 
   // If all models failed, throw a real informative error — NEVER serve a fake hardcoded reply
   throw new Error(
-    `Angitia AI is momentarily unable to reach Google Gemini. ${lastError ? `(${lastError})` : "Please try again in a few moments."}`,
+    `Angitia AI is momentarily unable to reach Google Gemini. Attempts: ${errors.join(", ") || "none"}. Please try again shortly.`,
   )
 }
