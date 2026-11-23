@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
-import { Link, useNavigate } from "react-router"
+import { useNavigate } from "react-router"
+import ReactMarkdown from "react-markdown"
 import {
   Send,
   X,
@@ -10,7 +11,6 @@ import {
   BookmarkCheck,
   Bookmark,
   ExternalLink,
-  ShieldAlert,
 } from "lucide-react"
 import AngitiaIcon from "@/components/AngitiaIcon"
 import { useAuth } from "@/context/AuthContext"
@@ -42,56 +42,66 @@ const INITIAL_MESSAGE: Message = {
 }
 
 /**
- * Lightweight parser for text with markdown links and bold formatting.
+ * Standard Markdown renderer for Angitia responses.
+ * Converts lists, bold, headers, and links into beautifully styled elements without raw symbols.
  */
 function FormattedMessage({ text }: { text: string }) {
   const navigate = useNavigate()
 
-  // Match markdown links [Title](url) and split
-  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g)
-
   return (
-    <div className="space-y-1.5 leading-relaxed text-xs sm:text-sm">
-      {parts.map((part, index) => {
-        const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
-        if (linkMatch) {
-          const [, label, url] = linkMatch
-          const isInternal = url.startsWith("/")
-          return (
-            <button
-              key={index}
-              onClick={() => {
-                if (isInternal) {
-                  navigate(url)
-                } else {
-                  window.open(url, "_blank", "noopener,noreferrer")
-                }
-              }}
-              className="inline-flex items-center gap-1 my-1 px-2.5 py-1 rounded-md text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
-            >
-              <span>{label}</span>
-              <ExternalLink className="w-3 h-3 text-blue-500" />
-            </button>
-          )
-        }
-
-        // Process bold markers **text**
-        const boldParts = part.split(/(\*\*[^*]+\*\*)/g)
-        return (
-          <span key={index}>
-            {boldParts.map((bPart, bIdx) => {
-              if (bPart.startsWith("**") && bPart.endsWith("**")) {
-                return (
-                  <strong key={bIdx} className="font-semibold text-slate-900">
-                    {bPart.slice(2, -2)}
-                  </strong>
-                )
-              }
-              return bPart
-            })}
-          </span>
-        )
-      })}
+    <div className="text-xs sm:text-sm text-slate-800 leading-relaxed space-y-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-1">
+      <ReactMarkdown
+        components={{
+          h1: ({ children }) => (
+            <h1 className="font-bold text-slate-900 text-sm sm:text-base mt-2 mb-1">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="font-bold text-slate-900 text-xs sm:text-sm mt-2 mb-1">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="font-semibold text-slate-900 text-xs sm:text-sm mt-1.5 mb-0.5">
+              {children}
+            </h3>
+          ),
+          p: ({ children }) => (
+            <p className="leading-relaxed mb-1.5 last:mb-0">{children}</p>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-semibold text-slate-900">{children}</strong>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc pl-4 space-y-1 my-1.5">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal pl-4 space-y-1 my-1.5">{children}</ol>
+          ),
+          li: ({ children }) => <li className="leading-relaxed pl-0.5">{children}</li>,
+          a: ({ href, children }) => {
+            const isInternal = href?.startsWith("/")
+            return (
+              <button
+                type="button"
+                onClick={() => {
+                  if (href) {
+                    if (isInternal) navigate(href)
+                    else window.open(href, "_blank", "noopener,noreferrer")
+                  }
+                }}
+                className="inline-flex items-center gap-1 my-0.5 px-2.5 py-0.5 rounded-md text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer align-baseline"
+              >
+                <span>{children}</span>
+                <ExternalLink className="w-3 h-3 text-blue-500" />
+              </button>
+            )
+          },
+        }}
+      >
+        {text}
+      </ReactMarkdown>
     </div>
   )
 }
