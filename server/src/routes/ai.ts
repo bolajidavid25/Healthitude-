@@ -57,11 +57,27 @@ aiRouter.post(
  * GET /api/ai/status
  * Quick health-check for Angitia AI service.
  */
-aiRouter.get("/status", (req: Request, res: Response) => {
+aiRouter.get("/status", (_req: Request, res: Response) => {
+  const rawKey =
+    process.env.ANGITIA ||
+    process.env.ANGITIA_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    ""
+  const keyDetected = Boolean(rawKey && rawKey.trim().length > 5)
+  const keySource = process.env.ANGITIA
+    ? "ANGITIA"
+    : process.env.ANGITIA_API_KEY
+      ? "ANGITIA_API_KEY"
+      : process.env.GEMINI_API_KEY
+        ? "GEMINI_API_KEY"
+        : "NONE"
+
   res.status(200).json({
     status: "ok",
     service: "Angitia AI Health Companion",
     model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    apiKeyConfigured: keyDetected,
+    keySource,
     active: true,
   })
 })

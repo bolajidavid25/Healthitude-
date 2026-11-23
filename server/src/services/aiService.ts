@@ -104,8 +104,23 @@ export async function generateAngitiaHealthResponse(
   message: string,
   history: ChatMessage[] = [],
 ): Promise<{ text: string; source: "gemini" | "fallback" }> {
-  const apiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY
-  const modelName = env.GEMINI_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash"
+  const rawKey =
+    process.env.ANGITIA ||
+    process.env.ANGITIA_API_KEY ||
+    env.GEMINI_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    ""
+  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "")
+
+  const preferredModel = (
+    process.env.GEMINI_MODEL ||
+    env.GEMINI_MODEL ||
+    "gemini-2.5-flash"
+  ).trim()
+  // Automatic fallback candidates across Google Gemini Flash versions
+  const candidateModels = Array.from(
+    new Set([preferredModel, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]),
+  )
 
   if (!apiKey) {
     return {
@@ -114,76 +129,73 @@ export async function generateAngitiaHealthResponse(
     }
   }
 
-  try {
-    // Format conversation history for Gemini API
-    const contents = [
-      ...history.slice(-8).map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.text }],
-      })),
-      {
-        role: "user",
-        parts: [{ text: message }],
-      },
-    ]
+  // Format conversation history for Gemini API
+  const contents = [
+    ...history.slice(-8).map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.text }],
+    })),
+    {
+      role: "user",
+      parts: [{ text: message }],
+    },
+  ]
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-      modelName,
-    )}:generateContent?key=${apiKey}`
+  for (const modelName of candidateModels) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        modelName,
+      )}:generateContent?key=${apiKey}`
 
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 12000)
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 12000)
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: SYSTEM_PROMPT }],
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
         },
-        contents,
-        generationConfig: {
-          temperature: 0.35, // Balanced, sound, clinical consistency
-          topP: 0.85,
-          maxOutputTokens: 650,
-        },
-      }),
-    })
+        signal: controller.signal,
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: SYSTEM_PROMPT }],
+          },
+          contents,
+          generationConfig: {
+            temperature: 0.35, // Balanced, sound, clinical consistency
+            topP: 0.85,
+            maxOutputTokens: 650,
+          },
+        }),
+      })
 
-    clearTimeout(timeout)
+      clearTimeout(timeout)
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.warn(`[Angitia AI] Gemini API returned ${response.status}:`, errText)
-      return {
-        text: getComfortingFallbackResponse(message),
-        source: "fallback",
+      if (!response.ok) {
+        const errText = await response.text()
+        console.warn(`[Angitia AI] Gemini model '${modelName}' returned status ${response.status}:`, errText)
+        continue
       }
-    }
 
-    const data = await response.json()
-    const candidateText =
-      data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+      const data = await response.json()
+      const candidateText =
+        data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
 
-    if (candidateText) {
-      return {
-        text: candidateText,
-        source: "gemini",
+      if (candidateText) {
+        return {
+          text: candidateText,
+          source: "gemini",
+        }
       }
+    } catch (error: any) {
+      console.warn(`[Angitia AI] Error calling Gemini model '${modelName}':`, error.message || error)
+      continue
     }
+  }
 
-    return {
-      text: getComfortingFallbackResponse(message),
-      source: "fallback",
-    }
-  } catch (error: any) {
-    console.warn("[Angitia AI] Error calling Gemini API:", error.message || error)
-    return {
-      text: getComfortingFallbackResponse(message),
-      source: "fallback",
-    }
+  return {
+    text: getComfortingFallbackResponse(message),
+    source: "fallback",
   }
 }

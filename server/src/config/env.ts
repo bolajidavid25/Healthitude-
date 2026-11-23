@@ -30,7 +30,14 @@ export const env = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
   COOKIE_SAME_SITE: cookieSameSite,
   UPLOAD_DIR: uploadDir,
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
+  GEMINI_API_KEY: (
+    process.env.ANGITIA ||
+    process.env.ANGITIA_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    ""
+  )
+    .trim()
+    .replace(/^["']|["']$/g, ""),
   GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-2.5-flash",
 } as const
 
