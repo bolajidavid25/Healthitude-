@@ -54,42 +54,9 @@ aiRouter.post(
 )
 
 /**
- * GET /api/ai/models
- * Returns the exact models supported by the user's API key directly from Google.
+ * GET /api/ai/status
+ * Quick health-check for Angitia AI service.
  */
-aiRouter.get("/models", async (_req: Request, res: Response) => {
-  const rawKey =
-    process.env.ANGITIA ||
-    process.env.ANGITIA_API_KEY ||
-    process.env.GEMINI_API_KEY ||
-    ""
-  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "")
-
-  if (!apiKey) {
-    res.status(200).json({ error: "No API key configured" })
-    return
-  }
-
-  try {
-    const listRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
-      { headers: { "x-goog-api-key": apiKey } },
-    )
-    const data = await listRes.json()
-    const names = (data.models || []).map((m: any) => ({
-      name: m.name?.replace("models/", ""),
-      displayName: m.displayName,
-      supportedActions: m.supportedGenerationMethods,
-    }))
-    res.status(200).json({
-      status: listRes.status,
-      count: names.length,
-      models: names,
-    })
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
-})
 aiRouter.get("/status", (_req: Request, res: Response) => {
   const rawKey =
     process.env.ANGITIA ||
@@ -108,107 +75,9 @@ aiRouter.get("/status", (_req: Request, res: Response) => {
   res.status(200).json({
     status: "ok",
     service: "Angitia AI Health Companion",
-    model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
     apiKeyConfigured: keyDetected,
     keySource,
     active: true,
-  })
-})
-
-/**
- * GET /api/ai/diagnostics
- * Safe diagnostic endpoint to verify Google Gemini API response.
- */
-aiRouter.get("/diagnostics", async (_req: Request, res: Response) => {
-  const rawKey =
-    process.env.ANGITIA ||
-    process.env.ANGITIA_API_KEY ||
-    process.env.GEMINI_API_KEY ||
-    ""
-  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "")
-
-  if (!apiKey) {
-    res.status(200).json({
-      configured: false,
-      message: "No API key found in ANGITIA or GEMINI_API_KEY",
-    })
-    return
-  }
-
-  const requestedModel =
-    typeof _req.query.model === "string" ? _req.query.model : undefined
-  const model = requestedModel || "gemini-3.8-flash"
-
-  // 1. Try modern Interactions API
-  let interactionsResult: any = null
-  try {
-    const interRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/interactions?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        signal: AbortSignal.timeout(3000),
-        body: JSON.stringify({
-          model,
-          input: "Hello, reply in one sentence.",
-        }),
-      },
-    )
-    const text = await interRes.text()
-    try {
-      interactionsResult = {
-        httpStatus: interRes.status,
-        ok: interRes.ok,
-        body: JSON.parse(text),
-      }
-    } catch {
-      interactionsResult = { httpStatus: interRes.status, ok: interRes.ok, raw: text }
-    }
-  } catch (err: any) {
-    interactionsResult = { error: err.message }
-  }
-
-  // 2. Try generateContent
-  let generateContentResult: any = null
-  try {
-    const genRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-        model,
-      )}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        signal: AbortSignal.timeout(4000),
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: "Hello" }] }],
-        }),
-      },
-    )
-    const text = await genRes.text()
-    try {
-      generateContentResult = {
-        httpStatus: genRes.status,
-        ok: genRes.ok,
-        body: JSON.parse(text),
-      }
-    } catch {
-      generateContentResult = { httpStatus: genRes.status, ok: genRes.ok, raw: text }
-    }
-  } catch (err: any) {
-    generateContentResult = { error: err.message }
-  }
-
-  res.status(200).json({
-    keyMasked: apiKey.slice(0, 6) + "..." + apiKey.slice(-4),
-    keyLength: apiKey.length,
-    modelTested: model,
-    interactionsApi: interactionsResult,
-    generateContentApi: generateContentResult,
   })
 })
