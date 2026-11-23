@@ -81,3 +81,60 @@ aiRouter.get("/status", (_req: Request, res: Response) => {
     active: true,
   })
 })
+
+/**
+ * GET /api/ai/diagnostics
+ * Safe diagnostic endpoint to see why Google Gemini responded or failed.
+ */
+aiRouter.get("/diagnostics", async (_req: Request, res: Response) => {
+  const rawKey =
+    process.env.ANGITIA ||
+    process.env.ANGITIA_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    ""
+  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "")
+
+  if (!apiKey) {
+    res.status(200).json({
+      configured: false,
+      message: "No API key found in ANGITIA or GEMINI_API_KEY",
+    })
+    return
+  }
+
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash"
+  const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+    model,
+  )}:generateContent?key=${apiKey}`
+
+  try {
+    const googleRes = await fetch(testUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
+      }),
+    })
+
+    const bodyText = await googleRes.text()
+    let parsedBody: any = bodyText
+    try {
+      parsedBody = JSON.parse(bodyText)
+    } catch {
+      // ignore
+    }
+
+    res.status(200).json({
+      keyMasked: apiKey.slice(0, 6) + "..." + apiKey.slice(-4),
+      keyLength: apiKey.length,
+      modelTested: model,
+      googleHttpStatus: googleRes.status,
+      googleOk: googleRes.ok,
+      googleResponse: parsedBody,
+    })
+  } catch (err: any) {
+    res.status(500).json({
+      error: err.message || String(err),
+    })
+  }
+})
