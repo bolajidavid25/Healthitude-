@@ -33,89 +33,14 @@ interface Message {
   role: "assistant" | "user"
   text: string
   time?: string
+  isError?: boolean
+  retryText?: string
 }
 
 const INITIAL_MESSAGE: Message = {
   role: "assistant",
-  text: "Hello! I am Angitia, your Healthitude health companion and platform co-pilot. You can ask me about symptoms, general health, medications, or how to book verified doctors on Healthitude.",
+  text: "Hello! I am Angitia, your Healthitude health companion and platform co-pilot. You can ask me about symptoms, general health, medications, or our verified doctors and services.",
   time: "Just now",
-}
-
-function getLocalHealthResponse(userPrompt: string): string {
-  const p = userPrompt.toLowerCase().trim()
-
-  if (
-    p.includes("built") ||
-    p.includes("found") ||
-    p.includes("who made") ||
-    p.includes("who created") ||
-    p.includes("bolaji") ||
-    p.includes("david") ||
-    p.includes("ibadan") ||
-    p.includes("about healthitude") ||
-    p.includes("what is healthitude")
-  ) {
-    return "Healthitude was founded in Ibadan, Nigeria by **Bolaji David**, a student of the prestigious **University of Ibadan**, through the help and grace of God. \n\nHe built Healthitude with a compassionate vision to solve healthcare's greatest hurdles:\n* Eliminating crippling medical costs through transparent category pricing\n* Connecting patients to verified doctors anywhere via [Book a Telemedicine Consultation](/telemedicine)\n* Keeping lifetime medical records safe and accessible\n* Providing instant [Break-Glass Emergency Protocol](/emergency) response."
-  }
-
-  const nonHealthKeywords = [
-    "code",
-    "python",
-    "javascript",
-    "html",
-    "css",
-    "sql",
-    "math",
-    "calculate",
-    "crypto",
-    "bitcoin",
-    "stock market",
-    "movie",
-    "song",
-    "football",
-    "president",
-    "politics",
-    "game",
-    "homework",
-  ]
-  if (nonHealthKeywords.some((k) => p.includes(k))) {
-    return "I am Angitia, your dedicated Healthitude health companion. My purpose is exclusively devoted to your health, wellness, and medical peace of mind. How can I support your health or well-being today?"
-  }
-
-  if (
-    p.includes("chest pain") ||
-    p.includes("heart attack") ||
-    p.includes("can't breathe") ||
-    p.includes("shortness of breath") ||
-    p.includes("stroke") ||
-    p.includes("unconscious")
-  ) {
-    return "⚠️ **Urgent Medical Notice:** Severe chest pain, sudden numbness, or difficulty breathing require immediate emergency medical attention. Please contact your nearest emergency department immediately or trigger our emergency protocol: [Break-Glass Emergency Protocol](/emergency)."
-  }
-
-  if (
-    p.includes("book") ||
-    p.includes("see a doctor") ||
-    p.includes("consult") ||
-    p.includes("appointment") ||
-    p.includes("specialist")
-  ) {
-    return "On Healthitude, you can easily connect with verified general practitioners and specialists for confidential consultations from the comfort of your home. You can schedule or start an instant consultation here: [Book a Telemedicine Consultation](/telemedicine)."
-  }
-
-  if (p.includes("headache") || p.includes("migraine")) {
-    return "I understand headaches can be very draining and uncomfortable. Common causes include dehydration, tension, eye strain, lack of sleep, or sinus pressure. \n\n* Rest in a quiet, dimly lit room\n* Sip clean cool water\n* Gently massage your temples and neck muscles\n\nIf your headache is sudden and unusually severe ('thunderclap'), accompanied by fever, neck stiffness, or vision changes, please seek emergency medical care or book an immediate review: [Book a Telemedicine Consultation](/telemedicine)."
-  }
-
-  if (p.includes("dizzy") || p.includes("dizziness") || p.includes("lightheaded")) {
-    return "Feeling dizzy can be very unsettling. Please take gentle care of yourself:\n\n* Sit or lie down in a safe position immediately\n* Avoid sudden head turns\n* Slowly sip clean water or electrolyte fluids\n\nIf dizziness persists or is accompanied by chest pain or slurred speech, please consult a verified doctor: [Book a Telemedicine Consultation](/telemedicine)."
-  }
-
-  if (p.includes("malaria") || p.includes("fever") || p.includes("chills") || p.includes("typhoid")) {
-    return "Fever and chills should always be treated with gentle care and attention. In tropical regions, fever can be a sign of malaria, typhoid, or a viral infection. \n\n* Rest and stay well hydrated with clean water or electrolyte fluids\n* Avoid self-medicating with unconfirmed antimalarials\n* Have a rapid diagnostic test (RDT) done and consult a verified doctor: [Book a Telemedicine Consultation](/telemedicine)."
-  }
-
-  return "Thank you for reaching out to me. Your health and peace of mind are deeply precious. While I can offer sound educational guidance on symptoms, wellness, and health management, nothing replaces the personalized insight of a licensed doctor. Take a gentle breath, stay well hydrated, and consider booking a video consultation with one of our verified Healthitude professionals: [Book a Telemedicine Consultation](/telemedicine)."
 }
 
 /**
@@ -258,7 +183,7 @@ export default function AngitiaAIWidget() {
 
     const userTime = getCurrentTime()
     const updatedMessages: Message[] = [
-      ...messages,
+      ...messages.filter((m) => !m.isError),
       { role: "user", text, time: userTime },
     ]
     setMessages(updatedMessages)
@@ -266,12 +191,15 @@ export default function AngitiaAIWidget() {
     setIsTyping(true)
 
     try {
-      const historyPayload = updatedMessages.slice(-6).map((m) => ({
-        role: m.role,
-        text: m.text,
-      }))
+      const historyPayload = updatedMessages
+        .filter((m) => !m.isError)
+        .slice(-6)
+        .map((m) => ({
+          role: m.role,
+          text: m.text,
+        }))
 
-      let response
+      let response: any
       try {
         response = await api.ai.chat(text, historyPayload)
       } catch {
@@ -280,24 +208,31 @@ export default function AngitiaAIWidget() {
         response = await api.ai.chat(text, historyPayload)
       }
 
-      const reply = response?.reply || getLocalHealthResponse(text)
+      if (!response?.reply) {
+        throw new Error("No response received from Angitia AI.")
+      }
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: reply,
+          text: response.reply,
           time: getCurrentTime(),
         },
       ])
-    } catch (err) {
-      console.warn("[Angitia AI] Connection error, using intelligent offline response:", err)
+    } catch (err: any) {
+      console.warn("[Angitia AI] Network/service error:", err)
+      const errorMsg =
+        err?.message ||
+        "Angitia AI is momentarily reconnecting to the medical knowledge base. Please check your connection and tap Retry."
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: getLocalHealthResponse(text),
+          text: errorMsg,
           time: getCurrentTime(),
+          isError: true,
+          retryText: text,
         },
       ])
     } finally {
@@ -423,26 +358,48 @@ export default function AngitiaAIWidget() {
                   m.role === "user" ? "items-end" : "items-start"
                 }`}
               >
-                <div
-                  className={`max-w-[88%] px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${
-                    m.role === "user"
-                      ? "text-white shadow-sm"
-                      : "bg-white text-slate-800 border border-slate-200/80 shadow-sm"
-                  }`}
-                  style={{
-                    borderRadius:
+                {m.isError ? (
+                  <div className="max-w-[88%] p-3 bg-red-50/90 border border-red-200 rounded-2xl text-xs text-red-800 space-y-2 shadow-xs">
+                    <div className="flex items-center gap-1.5 font-semibold text-red-700">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>Service Interrupted</span>
+                    </div>
+                    <p className="leading-relaxed text-[11px] text-red-600">
+                      {m.text}
+                    </p>
+                    {m.retryText && (
+                      <button
+                        type="button"
+                        onClick={() => handleSend(m.retryText)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-xs transition-colors shadow-xs cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Retry Message</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    className={`max-w-[88%] px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${
                       m.role === "user"
-                        ? "1rem 1rem 0.25rem 1rem"
-                        : "1rem 1rem 1rem 0.25rem",
-                    background: m.role === "user" ? BLUE : undefined,
-                  }}
-                >
-                  {m.role === "user" ? (
-                    <span>{m.text}</span>
-                  ) : (
-                    <FormattedMessage text={m.text} />
-                  )}
-                </div>
+                        ? "text-white shadow-sm"
+                        : "bg-white text-slate-800 border border-slate-200/80 shadow-sm"
+                    }`}
+                    style={{
+                      borderRadius:
+                        m.role === "user"
+                          ? "1rem 1rem 0.25rem 1rem"
+                          : "1rem 1rem 1rem 0.25rem",
+                      background: m.role === "user" ? BLUE : undefined,
+                    }}
+                  >
+                    {m.role === "user" ? (
+                      <span>{m.text}</span>
+                    ) : (
+                      <FormattedMessage text={m.text} />
+                    )}
+                  </div>
+                )}
                 {m.time && (
                   <span className="text-[10px] text-slate-400 mt-1 px-1">
                     {m.time}

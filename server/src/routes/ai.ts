@@ -79,6 +79,7 @@ aiRouter.post(
 
       const result = await generateAngitiaHealthResponse(message, history, {
         isLoggedIn: !!user,
+        userId: user?.id,
         userName: user?.firstName,
       })
 
@@ -91,8 +92,14 @@ aiRouter.post(
           isLoggedIn: !!user,
         },
       })
-    } catch (error) {
-      next(error)
+    } catch (error: any) {
+      res.status(502).json({
+        status: "error",
+        code: "AI_SERVICE_UNAVAILABLE",
+        message:
+          error.message ||
+          "Angitia AI is momentarily unable to reach the medical knowledge base. Please try again shortly.",
+      })
     }
   },
 )
