@@ -279,7 +279,7 @@ export default function AngitiaAIWidget() {
                   boxShadow: "0 0 12px rgba(14, 165, 233, 0.35)",
                 }}
               >
-                <AngitiaIcon size={24} color="#ffffff" pulseColor="#38bdf8" />
+                <AngitiaIcon size={26} color="#ffffff" pulseColor="#38bdf8" />
               </div>
               <div>
                 <h2
@@ -490,7 +490,7 @@ export default function AngitiaAIWidget() {
       >
         {/* Beating Heart Icon */}
         <div className="flex items-center justify-center flex-shrink-0">
-          <AngitiaIcon size={28} color="#ffffff" pulseColor="#38bdf8" />
+          <AngitiaIcon size={32} color="#ffffff" pulseColor="#38bdf8" />
         </div>
 
         {/* Text expands on hover */}
