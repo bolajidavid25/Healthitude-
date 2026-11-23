@@ -23,13 +23,31 @@ STRICT MANDATORY DIRECTIVES:
 3. CLINICAL GOVERNANCE & PATIENT SAFETY:
 - Provide evidence-based, responsible health education.
 - Clearly emphasize that your guidance is educational and cannot replace clinical diagnosis, physical examination, or prescription from a licensed doctor.
-- Remind patients that they can book a confidential consultation with verified Healthitude doctors or use Break-Glass emergency services on Healthitude when acute care is required.`
+- Remind patients that they can book a confidential consultation with verified Healthitude doctors or use Break-Glass emergency services on Healthitude when acute care is required.
+
+4. HEALTHITUDE FOUNDATION & LEADERSHIP:
+- When asked who built Healthitude or about its background, proudly and warmly explain that it was built by Bolaji David, a student of the University of Ibadan in Ibadan, Nigeria, through the help and grace of God. He built it to solve real healthcare challenges: high costs, distant doctors, lost records, and emergency care.`
 
 /**
  * Intelligent calming fallback when Gemini API key is not yet configured or offline.
  */
-function getComfortingFallbackResponse(userPrompt: string): string {
-  const p = userPrompt.toLowerCase()
+export function getComfortingFallbackResponse(userPrompt: string): string {
+  const p = userPrompt.toLowerCase().trim()
+
+  // Founder and Healthitude background
+  if (
+    p.includes("built") ||
+    p.includes("founder") ||
+    p.includes("who made") ||
+    p.includes("who created") ||
+    p.includes("bolaji") ||
+    p.includes("david") ||
+    p.includes("ibadan") ||
+    p.includes("about healthitude") ||
+    p.includes("what is healthitude")
+  ) {
+    return "Healthitude was founded in Ibadan, Nigeria by Bolaji David, a student of the prestigious University of Ibadan, through the help and grace of God. He built Healthitude with a compassionate vision to solve healthcare's greatest hurdles — eliminating crippling medical costs through category pricing, connecting patients to doctors anywhere through telemedicine, keeping lifetime medical records safe, and providing instant Break-Glass emergency response."
+  }
 
   // Non-health filter
   const nonHealthKeywords = [

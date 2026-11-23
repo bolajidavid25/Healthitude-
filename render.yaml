@@ -23,10 +23,7 @@ services:
       - key: COOKIE_SAME_SITE
         value: none
       - key: CORS_ORIGIN
-        fromService:
-          type: web
-          name: healthitude-web
-          property: host
+        value: https://healthitude-web.onrender.com,http://localhost:5173
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
@@ -44,7 +41,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: healthitude-api
-          property: host
+        value: https://healthitude-api.onrender.com

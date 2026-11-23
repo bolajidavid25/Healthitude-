@@ -707,15 +707,41 @@ export function getCsrfToken(): string | null {
   return inMemoryCsrfToken || getCookie("healthitude_csrf")
 }
 
-const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim()
-const API_BASE_URL = (
-  rawBaseUrl &&
-  !rawBaseUrl.startsWith("http://") &&
-  !rawBaseUrl.startsWith("https://") &&
-  !rawBaseUrl.startsWith("/")
-    ? `https://${rawBaseUrl}`
-    : rawBaseUrl
-).replace(/\/+$/, "")
+function resolveApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL || "").trim()
+
+  if (envUrl) {
+    let url = envUrl
+    if (
+      !url.startsWith("http://") &&
+      !url.startsWith("https://") &&
+      !url.startsWith("/")
+    ) {
+      url = `https://${url}`
+    }
+    // If Render injected internal private hostname 'healthitude-api' without TLD
+    if (
+      url.includes("healthitude-api") &&
+      !url.includes(".onrender.com")
+    ) {
+      return "https://healthitude-api.onrender.com"
+    }
+    return url.replace(/\/+$/, "")
+  }
+
+  // Automatic Render production origin binding:
+  // When running on healthitude-web.onrender.com (or any .onrender.com domain), point directly to healthitude-api.onrender.com
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".onrender.com")
+  ) {
+    return "https://healthitude-api.onrender.com"
+  }
+
+  return ""
+}
+
+const API_BASE_URL = resolveApiBaseUrl()
 
 async function fetchApi<T>(
   endpoint: string,

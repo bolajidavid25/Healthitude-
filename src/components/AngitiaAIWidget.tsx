@@ -21,6 +21,70 @@ interface Message {
   time?: string
 }
 
+function getLocalHealthResponse(userPrompt: string): string {
+  const p = userPrompt.toLowerCase().trim()
+
+  if (
+    p.includes("built") ||
+    p.includes("founder") ||
+    p.includes("who made") ||
+    p.includes("who created") ||
+    p.includes("bolaji") ||
+    p.includes("david") ||
+    p.includes("ibadan") ||
+    p.includes("about healthitude") ||
+    p.includes("what is healthitude")
+  ) {
+    return "Healthitude was founded in Ibadan, Nigeria by Bolaji David, a student of the prestigious University of Ibadan, through the help and grace of God. He built Healthitude with a compassionate vision to solve healthcare's greatest hurdles — eliminating crippling medical costs through category pricing, connecting patients to doctors anywhere through telemedicine, keeping lifetime medical records safe, and providing instant Break-Glass emergency response."
+  }
+
+  const nonHealthKeywords = [
+    "code",
+    "python",
+    "javascript",
+    "html",
+    "css",
+    "sql",
+    "math",
+    "calculate",
+    "crypto",
+    "bitcoin",
+    "stock market",
+    "movie",
+    "song",
+    "football",
+    "president",
+    "politics",
+    "game",
+    "homework",
+  ]
+  if (nonHealthKeywords.some((k) => p.includes(k))) {
+    return "I am Angitia, Healthitude's dedicated healthcare companion. My sole purpose is to support your health, wellness, and medical peace of mind. How may I assist you with your health, symptoms, or well-being today?"
+  }
+
+  if (p.includes("headache") || p.includes("migraine")) {
+    return "I understand headaches can be very draining and uncomfortable. Common causes include dehydration, tension, eye strain, lack of sleep, or sinus pressure. Please try resting in a quiet, dimly lit room, sipping cool water, and relaxing your neck muscles. If your headache is sudden and unusually severe ('thunderclap'), accompanied by fever, neck stiffness, or vision changes, please seek immediate emergency medical care or consult a verified Healthitude physician right away."
+  }
+
+  if (p.includes("stomach") || p.includes("abdominal") || p.includes("belly") || p.includes("cramp")) {
+    return "I hear your concern, and abdominal discomfort can feel very distressing. Gentle measures such as sipping warm peppermint or ginger tea, staying hydrated, and avoiding heavy, greasy foods can help soothe mild indigestion or gas. However, if your pain is sharp, concentrated on one side, accompanied by fever, vomiting, or persistent diarrhea, it is very important to have one of our verified Healthitude clinicians evaluate you to ensure proper care."
+  }
+
+  if (p.includes("blood pressure") || p.includes("hypertension") || p.includes("bp")) {
+    return "Blood pressure is one of the most vital markers of cardiovascular health. A normal resting blood pressure for adults is generally below 120/80 mmHg. Consistent readings of 130/80 mmHg or higher indicate hypertension. Managing stress, reducing salt intake, staying active, and taking prescribed medications consistently make a profound difference. Would you like to schedule a review with a verified Healthitude doctor?"
+  }
+
+  if (p.includes("anxious") || p.includes("anxiety") || p.includes("stress") || p.includes("depress") || p.includes("panic")) {
+    return "Please take a slow, gentle breath. You are not alone, and it is completely okay to feel overwhelmed at times. Try breathing in deeply for four counts, holding gently for four, and breathing out slowly for six. Ground yourself by noticing three things around you. Mental health is just as critical as physical health, and our verified doctors are here to provide compassionate, confidential support whenever you need."
+  }
+
+  if (p.includes("malaria") || p.includes("fever") || p.includes("chills") || p.includes("typhoid")) {
+    return "Fever and chills should always be treated with gentle care and attention. In tropical regions, fever can be a sign of malaria, typhoid, or a viral infection. Rest, stay well hydrated with clean water or electrolyte fluids, and avoid self-medicating with unconfirmed antimalarials. We strongly recommend having a rapid diagnostic test (RDT) or full blood count done, and consulting a verified Healthitude doctor who can guide your safe recovery."
+  }
+
+  return "Thank you for reaching out to me. Your health and peace of mind are deeply precious. While I can offer sound educational guidance on symptoms, wellness, and health management, nothing replaces the personalized insight of a licensed doctor. Take a gentle breath, stay well hydrated, and consider booking a video consultation with one of our verified Healthitude professionals who can carefully review your history."
+}
+
 export default function AngitiaAIWidget() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -79,13 +143,13 @@ export default function AngitiaAIWidget() {
         },
       ])
     } catch {
-      // Calming emergency fallback if offline or network hiccup
+      // Sound calming clinical fallback
+      const fallbackReply = getLocalHealthResponse(text)
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text:
-            "I hear you, and your well-being is of utmost importance. Please take a slow, gentle breath. I am momentarily operating in offline mode, but remember to stay hydrated, rest, and connect with a verified Healthitude doctor if you need clinical evaluation.",
+          text: fallbackReply,
           time: getCurrentTime(),
         },
       ])
@@ -136,24 +200,12 @@ export default function AngitiaAIWidget() {
                 <AngitiaIcon size={24} color="#ffffff" pulseColor="#38bdf8" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <h2
-                    id="angitia-title"
-                    className="text-white text-sm font-bold tracking-tight leading-tight"
-                  >
-                    Angitia AI
-                  </h2>
-                  <span
-                    className="inline-flex items-center gap-1 px-1.5 py-0.2 text-[10px] font-semibold text-sky-200 bg-sky-500/20 border border-sky-400/30"
-                    style={{ borderRadius: "9999px" }}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Gemini Flash
-                  </span>
-                </div>
-                <p className="text-white/70 text-[11px] leading-tight">
-                  Calming Health Companion · Health Questions Only
-                </p>
+                <h2
+                  id="angitia-title"
+                  className="text-white text-base font-bold tracking-tight leading-tight"
+                >
+                  Angitia AI
+                </h2>
               </div>
             </div>
 
@@ -171,7 +223,7 @@ export default function AngitiaAIWidget() {
           <div className="px-3 py-1.5 bg-amber-50/90 border-b border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
             <span>
-              <strong>Dedicated Health Companion:</strong> Answers health & wellness topics only. Not a medical diagnosis.
+              <strong>Educational only:</strong> Not a medical diagnosis or prescription.
             </span>
           </div>
 

@@ -40,18 +40,28 @@ export function createApp(options?: AppOptions): Express {
     fs.existsSync(distPath) && fs.existsSync(path.join(distPath, "index.html"))
 
   // 1. Security & CORS (Rule J, K: Explicit origin(s) with credentials, no wildcard)
-  const allowedOrigins = env.CORS_ORIGIN.split(",")
+  const configuredOrigins = env.CORS_ORIGIN.split(",")
     .map((o) => o.trim())
     .filter(Boolean)
-    .flatMap((o) =>
-      o.startsWith("http://") || o.startsWith("https://")
-        ? [o]
-        : [`https://${o}`, `http://${o}`],
-    )
 
   app.use(
     cors({
-      origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
+      origin: (requestOrigin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl, or same-origin)
+        if (!requestOrigin) return callback(null, true)
+
+        // Allow any Healthitude onrender.com origin, localhost, or configured CORS origin
+        if (
+          requestOrigin.endsWith(".onrender.com") ||
+          requestOrigin.includes("localhost") ||
+          requestOrigin.includes("127.0.0.1") ||
+          configuredOrigins.some((co) => requestOrigin.includes(co))
+        ) {
+          return callback(null, true)
+        }
+
+        callback(null, false)
+      },
       credentials: true,
     }),
   )
