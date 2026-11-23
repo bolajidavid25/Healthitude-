@@ -38,7 +38,7 @@ export const env = {
   )
     .trim()
     .replace(/^["']|["']$/g, ""),
-  GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+  GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-3.8-flash",
 } as const
 
 export type EnvConfig = typeof env

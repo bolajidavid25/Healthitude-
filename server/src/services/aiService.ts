@@ -112,14 +112,16 @@ export async function generateAngitiaHealthResponse(
     ""
   const apiKey = rawKey.trim().replace(/^["']|["']$/g, "")
 
-  const preferredModel = (
+  const rawModel = (
     process.env.GEMINI_MODEL ||
     env.GEMINI_MODEL ||
-    "gemini-2.5-flash"
+    "gemini-3.8-flash"
   ).trim()
-  // Automatic fallback candidates across Google Gemini Flash versions
+  const preferredModel =
+    rawModel === "gemini-2.5-flash" || !rawModel ? "gemini-3.8-flash" : rawModel
+  // Prioritize gemini-3.8-flash as recommended by Google AI Studio
   const candidateModels = Array.from(
-    new Set([preferredModel, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]),
+    new Set([preferredModel, "gemini-3.8-flash", "gemini-2.5-flash"]),
   )
 
   if (!apiKey) {
