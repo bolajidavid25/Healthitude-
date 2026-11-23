@@ -1,19 +1,33 @@
 import { useState, useEffect, useRef } from "react"
-import { Send, X, AlertCircle, Sparkles, Bot, HeartPulse } from "lucide-react"
+import { Link, useNavigate } from "react-router"
+import {
+  Send,
+  X,
+  AlertCircle,
+  Sparkles,
+  Bot,
+  RotateCcw,
+  BookmarkCheck,
+  Bookmark,
+  ExternalLink,
+  ShieldAlert,
+} from "lucide-react"
 import AngitiaIcon from "@/components/AngitiaIcon"
+import { useAuth } from "@/context/AuthContext"
 import { api } from "@/utils/api"
 
 const BLUE = "#1a3fcf"
 const NAVY = "#0d1b4b"
-const SKY = "#0ea5e9"
 
-const PRESET_QUESTIONS = [
+const PRESET_TOPICS = [
+  "How do I book a doctor?",
   "What is normal blood pressure?",
-  "How does telemedicine work on Healthitude?",
-  "How do I prepare for a doctor consultation?",
-  "What is the difference between GP and Specialist?",
-  "What are the symptoms of Type 2 diabetes?",
+  "What are common symptoms of malaria?",
+  "How does Break-Glass emergency work?",
+  "Who built Healthitude?",
 ]
+
+const STORAGE_KEY = "healthitude_angitia_session_v2"
 
 interface Message {
   role: "assistant" | "user"
@@ -21,83 +35,97 @@ interface Message {
   time?: string
 }
 
-function getLocalHealthResponse(userPrompt: string): string {
-  const p = userPrompt.toLowerCase().trim()
+const INITIAL_MESSAGE: Message = {
+  role: "assistant",
+  text: "Hello! I am Angitia, your Healthitude health companion and platform co-pilot. You can ask me about symptoms, general health, medications, or how to book verified doctors on Healthitude.",
+  time: "Just now",
+}
 
-  if (
-    p.includes("built") ||
-    p.includes("founder") ||
-    p.includes("who made") ||
-    p.includes("who created") ||
-    p.includes("bolaji") ||
-    p.includes("david") ||
-    p.includes("ibadan") ||
-    p.includes("about healthitude") ||
-    p.includes("what is healthitude")
-  ) {
-    return "Healthitude was founded in Ibadan, Nigeria by Bolaji David, a student of the prestigious University of Ibadan, through the help and grace of God. He built Healthitude with a compassionate vision to solve healthcare's greatest hurdles — eliminating crippling medical costs through category pricing, connecting patients to doctors anywhere through telemedicine, keeping lifetime medical records safe, and providing instant Break-Glass emergency response."
-  }
+/**
+ * Lightweight parser for text with markdown links and bold formatting.
+ */
+function FormattedMessage({ text }: { text: string }) {
+  const navigate = useNavigate()
 
-  const nonHealthKeywords = [
-    "code",
-    "python",
-    "javascript",
-    "html",
-    "css",
-    "sql",
-    "math",
-    "calculate",
-    "crypto",
-    "bitcoin",
-    "stock market",
-    "movie",
-    "song",
-    "football",
-    "president",
-    "politics",
-    "game",
-    "homework",
-  ]
-  if (nonHealthKeywords.some((k) => p.includes(k))) {
-    return "I am Angitia, Healthitude's dedicated healthcare companion. My sole purpose is to support your health, wellness, and medical peace of mind. How may I assist you with your health, symptoms, or well-being today?"
-  }
+  // Match markdown links [Title](url) and split
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g)
 
-  if (p.includes("headache") || p.includes("migraine")) {
-    return "I understand headaches can be very draining and uncomfortable. Common causes include dehydration, tension, eye strain, lack of sleep, or sinus pressure. Please try resting in a quiet, dimly lit room, sipping cool water, and relaxing your neck muscles. If your headache is sudden and unusually severe ('thunderclap'), accompanied by fever, neck stiffness, or vision changes, please seek immediate emergency medical care or consult a verified Healthitude physician right away."
-  }
+  return (
+    <div className="space-y-1.5 leading-relaxed text-xs sm:text-sm">
+      {parts.map((part, index) => {
+        const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+        if (linkMatch) {
+          const [, label, url] = linkMatch
+          const isInternal = url.startsWith("/")
+          return (
+            <button
+              key={index}
+              onClick={() => {
+                if (isInternal) {
+                  navigate(url)
+                } else {
+                  window.open(url, "_blank", "noopener,noreferrer")
+                }
+              }}
+              className="inline-flex items-center gap-1 my-1 px-2.5 py-1 rounded-md text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+            >
+              <span>{label}</span>
+              <ExternalLink className="w-3 h-3 text-blue-500" />
+            </button>
+          )
+        }
 
-  if (p.includes("stomach") || p.includes("abdominal") || p.includes("belly") || p.includes("cramp")) {
-    return "I hear your concern, and abdominal discomfort can feel very distressing. Gentle measures such as sipping warm peppermint or ginger tea, staying hydrated, and avoiding heavy, greasy foods can help soothe mild indigestion or gas. However, if your pain is sharp, concentrated on one side, accompanied by fever, vomiting, or persistent diarrhea, it is very important to have one of our verified Healthitude clinicians evaluate you to ensure proper care."
-  }
-
-  if (p.includes("blood pressure") || p.includes("hypertension") || p.includes("bp")) {
-    return "Blood pressure is one of the most vital markers of cardiovascular health. A normal resting blood pressure for adults is generally below 120/80 mmHg. Consistent readings of 130/80 mmHg or higher indicate hypertension. Managing stress, reducing salt intake, staying active, and taking prescribed medications consistently make a profound difference. Would you like to schedule a review with a verified Healthitude doctor?"
-  }
-
-  if (p.includes("anxious") || p.includes("anxiety") || p.includes("stress") || p.includes("depress") || p.includes("panic")) {
-    return "Please take a slow, gentle breath. You are not alone, and it is completely okay to feel overwhelmed at times. Try breathing in deeply for four counts, holding gently for four, and breathing out slowly for six. Ground yourself by noticing three things around you. Mental health is just as critical as physical health, and our verified doctors are here to provide compassionate, confidential support whenever you need."
-  }
-
-  if (p.includes("malaria") || p.includes("fever") || p.includes("chills") || p.includes("typhoid")) {
-    return "Fever and chills should always be treated with gentle care and attention. In tropical regions, fever can be a sign of malaria, typhoid, or a viral infection. Rest, stay well hydrated with clean water or electrolyte fluids, and avoid self-medicating with unconfirmed antimalarials. We strongly recommend having a rapid diagnostic test (RDT) or full blood count done, and consulting a verified Healthitude doctor who can guide your safe recovery."
-  }
-
-  return "Thank you for reaching out to me. Your health and peace of mind are deeply precious. While I can offer sound educational guidance on symptoms, wellness, and health management, nothing replaces the personalized insight of a licensed doctor. Take a gentle breath, stay well hydrated, and consider booking a video consultation with one of our verified Healthitude professionals who can carefully review your history."
+        // Process bold markers **text**
+        const boldParts = part.split(/(\*\*[^*]+\*\*)/g)
+        return (
+          <span key={index}>
+            {boldParts.map((bPart, bIdx) => {
+              if (bPart.startsWith("**") && bPart.endsWith("**")) {
+                return (
+                  <strong key={bIdx} className="font-semibold text-slate-900">
+                    {bPart.slice(2, -2)}
+                  </strong>
+                )
+              }
+              return bPart
+            })}
+          </span>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function AngitiaAIWidget() {
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      text: "Hello! I am Angitia, your Healthitude health and care assistant. Ask me anything about general health topics, symptoms, wellness, or how Healthitude connects you with verified doctors.",
-      time: "Just now",
-    },
-  ])
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch {
+      // ignore
+    }
+    return [INITIAL_MESSAGE]
+  })
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Persist session to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+    } catch {
+      // ignore
+    }
+  }, [messages])
 
   useEffect(() => {
     if (open) {
@@ -108,6 +136,33 @@ export default function AngitiaAIWidget() {
 
   function getCurrentTime() {
     return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  }
+
+  function handleReset() {
+    setMessages([INITIAL_MESSAGE])
+    setSaveStatus("idle")
+    try {
+      sessionStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleSaveChat() {
+    if (messages.length <= 1 || saveStatus === "saving" || saveStatus === "saved") return
+    setSaveStatus("saving")
+    try {
+      const title =
+        messages.find((m) => m.role === "user")?.text.slice(0, 60) ||
+        "Angitia Health Consultation"
+
+      await api.ai.save(title, messages)
+      setSaveStatus("saved")
+      setTimeout(() => setSaveStatus("idle"), 4000)
+    } catch (err) {
+      console.error("[Angitia AI] Error saving chat:", err)
+      setSaveStatus("idle")
+    }
   }
 
   async function handleSend(textToSend?: string) {
@@ -132,7 +187,7 @@ export default function AngitiaAIWidget() {
       const response = await api.ai.chat(text, historyPayload)
       const reply =
         response?.reply ||
-        "I hear you, and your health matters deeply. Please rest assured you are in safe hands. For personalized clinical review and diagnosis, our verified Healthitude doctors are available via telemedicine."
+        "I hear you, and your health matters deeply. For personalized clinical review and diagnosis, our verified Healthitude doctors are available: [Book a Telemedicine Consultation](/telemedicine)."
 
       setMessages((prev) => [
         ...prev,
@@ -142,14 +197,13 @@ export default function AngitiaAIWidget() {
           time: getCurrentTime(),
         },
       ])
-    } catch {
-      // Sound calming clinical fallback
-      const fallbackReply = getLocalHealthResponse(text)
+    } catch (err) {
+      console.warn("[Angitia AI] Connection error, using offline response:", err)
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: fallbackReply,
+          text: "Thank you for reaching out. Please take a gentle breath and stay well hydrated. Our verified doctors are available for confidential medical evaluations whenever you need: [Book a Telemedicine Consultation](/telemedicine).",
           time: getCurrentTime(),
         },
       ])
@@ -172,9 +226,9 @@ export default function AngitiaAIWidget() {
           aria-labelledby="angitia-title"
           className="mb-3 flex flex-col bg-white shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
           style={{
-            width: "380px",
+            width: "390px",
             maxWidth: "calc(100vw - 32px)",
-            height: "530px",
+            height: "540px",
             maxHeight: "calc(100vh - 120px)",
             borderRadius: "1.25rem",
             boxShadow:
@@ -202,29 +256,69 @@ export default function AngitiaAIWidget() {
               <div>
                 <h2
                   id="angitia-title"
-                  className="text-white text-base font-bold tracking-tight leading-tight"
+                  className="text-white text-base font-bold tracking-tight leading-tight flex items-center gap-1.5"
                 >
                   Angitia AI
                 </h2>
+                <p className="text-[11px] text-sky-200 font-medium">
+                  Health Companion & Platform Co-Pilot
+                </p>
               </div>
             </div>
 
-            <button
-              onClick={() => setOpen(false)}
-              className="w-8 h-8 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
-              style={{ borderRadius: "9999px" }}
-              aria-label="Close Angitia AI"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              {/* Reset button */}
+              <button
+                onClick={handleReset}
+                title="Start new conversation"
+                aria-label="Start new conversation"
+                className="w-8 h-8 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/15 transition-colors cursor-pointer rounded-full"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Close button */}
+              <button
+                onClick={() => setOpen(false)}
+                className="w-8 h-8 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer rounded-full"
+                aria-label="Close Angitia AI"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </header>
 
-          {/* Clinical Disclaimer */}
-          <div className="px-3 py-1.5 bg-amber-50/90 border-b border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-            <span>
-              <strong>Educational only:</strong> Not a medical diagnosis or prescription.
-            </span>
+          {/* Clinical & Safety Disclaimer */}
+          <div className="px-3 py-1.5 bg-amber-50/90 border-b border-amber-200/70 text-[11px] text-amber-800 flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+              <span>
+                <strong>Educational only:</strong> Not a medical diagnosis.
+              </span>
+            </div>
+
+            {/* Save chat button for logged-in patients */}
+            {user && user.role === "patient" && messages.length > 1 && (
+              <button
+                onClick={handleSaveChat}
+                disabled={saveStatus === "saving" || saveStatus === "saved"}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                  saveStatus === "saved"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-white text-blue-700 hover:bg-blue-50 border border-blue-200"
+                }`}
+              >
+                {saveStatus === "saved" ? (
+                  <>
+                    <BookmarkCheck className="w-3 h-3 text-emerald-600" /> Saved
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-3 h-3 text-blue-600" /> Save Chat
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Conversation history */}
@@ -237,9 +331,9 @@ export default function AngitiaAIWidget() {
                 }`}
               >
                 <div
-                  className={`max-w-[85%] px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${
+                  className={`max-w-[88%] px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${
                     m.role === "user"
-                      ? "text-white"
+                      ? "text-white shadow-sm"
                       : "bg-white text-slate-800 border border-slate-200/80 shadow-sm"
                   }`}
                   style={{
@@ -250,7 +344,11 @@ export default function AngitiaAIWidget() {
                     background: m.role === "user" ? BLUE : undefined,
                   }}
                 >
-                  {m.text}
+                  {m.role === "user" ? (
+                    <span>{m.text}</span>
+                  ) : (
+                    <FormattedMessage text={m.text} />
+                  )}
                 </div>
                 {m.time && (
                   <span className="text-[10px] text-slate-400 mt-1 px-1">
@@ -278,18 +376,17 @@ export default function AngitiaAIWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Preset Prompts (Show when message list is short) */}
+          {/* Quick Co-Pilot Suggestions */}
           {messages.length <= 2 && !isTyping && (
             <div className="px-3 py-2 bg-white border-t border-slate-100 flex flex-wrap gap-1.5">
               <span className="w-full text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-sky-500" /> Suggested topics
               </span>
-              {PRESET_QUESTIONS.map((q) => (
+              {PRESET_TOPICS.map((q) => (
                 <button
                   key={q}
                   onClick={() => handleSend(q)}
-                  className="text-[11px] px-2.5 py-1 bg-blue-50/70 border border-blue-200/80 text-blue-800 hover:bg-blue-100/80 hover:border-blue-300 transition-all text-left cursor-pointer"
-                  style={{ borderRadius: "9999px" }}
+                  className="text-[11px] px-2.5 py-1 bg-blue-50/70 border border-blue-200/80 text-blue-800 hover:bg-blue-100/80 hover:border-blue-300 transition-all text-left cursor-pointer rounded-full"
                 >
                   {q}
                 </button>
@@ -298,7 +395,7 @@ export default function AngitiaAIWidget() {
           )}
 
           {/* Input & Send */}
-          <footer className="border-t border-slate-200/80 bg-white px-3 py-2.5 flex items-center gap-2">
+          <footer className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
             <input
               ref={inputRef}
               type="text"
@@ -310,18 +407,16 @@ export default function AngitiaAIWidget() {
                   handleSend()
                 }
               }}
-              placeholder="Ask Angitia about health, symptoms..."
-              className="flex-1 bg-slate-50 border border-slate-300 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
-              style={{ borderRadius: "0.625rem" }}
+              placeholder="Ask Angitia about health, symptoms, doctors..."
+              className="flex-1 bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white text-xs sm:text-sm text-slate-800 placeholder-slate-400 px-3.5 py-2.5 rounded-xl outline-none transition-all"
+              aria-label="Ask Angitia about health or doctors"
+              disabled={isTyping}
             />
+
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || isTyping}
-              className="w-9 h-9 flex items-center justify-center flex-shrink-0 text-white disabled:opacity-40 transition-all cursor-pointer hover:brightness-110 active:scale-95"
-              style={{
-                borderRadius: "0.625rem",
-                background: `linear-gradient(135deg, ${BLUE}, ${SKY})`,
-              }}
+              className="w-10 h-10 flex items-center justify-center text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:hover:bg-blue-600 transition-colors shadow-sm cursor-pointer rounded-xl flex-shrink-0"
               aria-label="Send message to Angitia"
             >
               <Send className="w-4 h-4" />
@@ -330,50 +425,37 @@ export default function AngitiaAIWidget() {
         </div>
       )}
 
-      {/* ── Floating Action Button (Sticky lower right) ── */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setOpen((prev) => !prev)}
-          className="group flex items-center justify-center text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden h-14 px-3.5 hover:px-5"
-          style={{
-            borderRadius: "9999px",
-            background: open
-              ? "#1e293b"
-              : `linear-gradient(135deg, ${NAVY} 0%, ${BLUE} 60%, ${SKY} 100%)`,
-            border: "1.5px solid rgba(255, 255, 255, 0.35)",
-            boxShadow:
-              "0 10px 25px -3px rgba(26, 63, 207, 0.45), 0 4px 10px -2px rgba(14, 165, 233, 0.35)",
-            minWidth: "3.5rem",
-          }}
-          aria-expanded={open}
-          aria-label={open ? "Close Angitia AI" : "Angitia AI"}
-          title="Angitia AI"
-        >
-          {/* Subtle pulse wave on unopened state */}
-          {!open && (
-            <span
-              className="absolute -inset-1 rounded-full opacity-35 animate-ping pointer-events-none"
-              style={{
-                background: `radial-gradient(circle, ${SKY} 0%, rgba(14, 165, 233, 0) 70%)`,
-              }}
-            />
-          )}
+      {/* ── Floating Sticky Toggle (Beating Heart Icon -> Hover to reveal 'Angitia AI') ── */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-label={open ? "Close Angitia AI" : "Angitia AI Health Companion"}
+        title="Angitia AI"
+        className="group relative flex items-center h-14 bg-gradient-to-r from-[#0d1b4b] to-[#1a3fcf] text-white shadow-xl hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer overflow-hidden active:scale-95 border-2 border-white/20"
+        style={{
+          borderRadius: "9999px",
+          paddingLeft: "0.875rem",
+          paddingRight: open ? "0.875rem" : "0.875rem",
+        }}
+      >
+        {/* Beating Heart Icon */}
+        <div className="flex items-center justify-center flex-shrink-0">
+          <AngitiaIcon size={28} color="#ffffff" pulseColor="#38bdf8" />
+        </div>
 
-          {open ? (
-            <X className="w-6 h-6 flex-shrink-0 text-white" />
-          ) : (
-            <div className="flex items-center">
-              <div className="relative flex items-center justify-center flex-shrink-0">
-                <AngitiaIcon size={28} color="#ffffff" pulseColor="#38bdf8" />
-              </div>
-              <span className="max-w-0 opacity-0 group-hover:max-w-[140px] group-hover:opacity-100 group-hover:ml-2.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap text-sm font-bold tracking-tight text-white flex items-center gap-1.5 leading-none">
-                Angitia AI
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-              </span>
-            </div>
-          )}
-        </button>
-      </div>
+        {/* Text expands on hover */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-out whitespace-nowrap ${
+            open
+              ? "max-w-[120px] ml-2 opacity-100"
+              : "max-w-0 opacity-0 group-hover:max-w-[120px] group-hover:ml-2 group-hover:opacity-100"
+          }`}
+        >
+          <span className="font-semibold text-sm tracking-tight pr-1">
+            {open ? "Close" : "Angitia AI"}
+          </span>
+        </div>
+      </button>
     </aside>
   )
 }

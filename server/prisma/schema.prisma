@@ -116,6 +116,7 @@ model User {
   appointments     Appointment[]
   emergencyCases   EmergencyCase[]
   notifications    Notification[]
+  angitiaChats     AngitiaChatRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -660,6 +661,20 @@ model AdminAuditLog {
   @@index([adminId])
   @@index([action])
   @@index([targetType])
+  @@index([createdAt])
+}
+
+model AngitiaChatRecord {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  summary   String?
+  messages  Json
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@index([createdAt])
 }
 

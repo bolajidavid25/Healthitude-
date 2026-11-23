@@ -418,7 +418,8 @@ export const ModelName = {
   ProfessionalVerificationLog: 'ProfessionalVerificationLog',
   Administrator: 'Administrator',
   AdminSession: 'AdminSession',
-  AdminAuditLog: 'AdminAuditLog'
+  AdminAuditLog: 'AdminAuditLog',
+  AngitiaChatRecord: 'AngitiaChatRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -434,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "emergencyContact" | "healthProfile" | "patientCategoryRecord" | "consentRecord" | "session" | "complaint" | "clinicalRecord" | "prescription" | "medicationAdherence" | "appointment" | "emergencyCase" | "emergencyAuditLog" | "notification" | "professional" | "professionalCredentialDocument" | "professionalSession" | "professionalVerificationLog" | "administrator" | "adminSession" | "adminAuditLog"
+    modelProps: "user" | "address" | "emergencyContact" | "healthProfile" | "patientCategoryRecord" | "consentRecord" | "session" | "complaint" | "clinicalRecord" | "prescription" | "medicationAdherence" | "appointment" | "emergencyCase" | "emergencyAuditLog" | "notification" | "professional" | "professionalCredentialDocument" | "professionalSession" | "professionalVerificationLog" | "administrator" | "adminSession" | "adminAuditLog" | "angitiaChatRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2066,6 +2067,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AngitiaChatRecord: {
+      payload: Prisma.$AngitiaChatRecordPayload<ExtArgs>
+      fields: Prisma.AngitiaChatRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AngitiaChatRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AngitiaChatRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.AngitiaChatRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AngitiaChatRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>
+        }
+        findMany: {
+          args: Prisma.AngitiaChatRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>[]
+        }
+        create: {
+          args: Prisma.AngitiaChatRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>
+        }
+        createMany: {
+          args: Prisma.AngitiaChatRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AngitiaChatRecordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>[]
+        }
+        delete: {
+          args: Prisma.AngitiaChatRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>
+        }
+        update: {
+          args: Prisma.AngitiaChatRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.AngitiaChatRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AngitiaChatRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AngitiaChatRecordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>[]
+        }
+        upsert: {
+          args: Prisma.AngitiaChatRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AngitiaChatRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.AngitiaChatRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAngitiaChatRecord>
+        }
+        groupBy: {
+          args: Prisma.AngitiaChatRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AngitiaChatRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AngitiaChatRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AngitiaChatRecordCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2517,6 +2592,18 @@ export const AdminAuditLogScalarFieldEnum = {
 export type AdminAuditLogScalarFieldEnum = (typeof AdminAuditLogScalarFieldEnum)[keyof typeof AdminAuditLogScalarFieldEnum]
 
 
+export const AngitiaChatRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  summary: 'summary',
+  messages: 'messages',
+  createdAt: 'createdAt'
+} as const
+
+export type AngitiaChatRecordScalarFieldEnum = (typeof AngitiaChatRecordScalarFieldEnum)[keyof typeof AngitiaChatRecordScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2531,6 +2618,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -3093,6 +3187,7 @@ export type GlobalOmitConfig = {
   administrator?: Prisma.AdministratorOmit
   adminSession?: Prisma.AdminSessionOmit
   adminAuditLog?: Prisma.AdminAuditLogOmit
+  angitiaChatRecord?: Prisma.AngitiaChatRecordOmit
 }
 
 /* Types for Logging */

@@ -3,7 +3,7 @@ import http from "http"
 
 async function runAiTests() {
   console.log("================================================================================")
-  console.log("HEALTHITUDE: ANGITIA AI (GEMINI FLASH) INTEGRATION & HEALTH DOMAIN TESTS")
+  console.log("HEALTHITUDE: ANGITIA AI REBUILD (GEMINI FLASH CO-PILOT & TRIAGE) TEST SUITE")
   console.log("================================================================================")
 
   const app = createApp()
@@ -47,7 +47,71 @@ async function runAiTests() {
     }
     console.log("✓ Check 2 Passed: Health prompt returns sound, calming clinical guidance.")
 
-    // Check 3: POST /api/ai/angitia with a non-health prompt (e.g. coding / crypto / math)
+    // Check 3: Platform Co-Pilot Navigation Test (asking about booking a doctor)
+    const navRes = await fetch(`${baseUrl}/api/ai/angitia`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: "How can I book an appointment with a verified doctor?",
+        history: [],
+      }),
+    })
+    if (navRes.status !== 200) {
+      throw new Error(`Check 3 Failed: Expected 200, got ${navRes.status}`)
+    }
+    const navData = await navRes.json()
+    const navReply = navData.data?.reply || ""
+    if (!navReply.toLowerCase().includes("telemedicine") && !navReply.toLowerCase().includes("doctor")) {
+      throw new Error(`Check 3 Failed: Missing platform navigation guidance. Reply: ${navReply}`)
+    }
+    console.log("✓ Check 3 Passed: Platform Co-Pilot successfully guides user to doctor booking & telemedicine.")
+
+    // Check 4: Emergency Red-Flag Test
+    const emergencyRes = await fetch(`${baseUrl}/api/ai/angitia`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: "I have severe sudden chest pain and trouble breathing",
+        history: [],
+      }),
+    })
+    if (emergencyRes.status !== 200) {
+      throw new Error(`Check 4 Failed: Expected 200, got ${emergencyRes.status}`)
+    }
+    const emergencyData = await emergencyRes.json()
+    const emergencyReply = emergencyData.data?.reply || ""
+    if (
+      !emergencyReply.toLowerCase().includes("emergency") &&
+      !emergencyReply.toLowerCase().includes("immediate")
+    ) {
+      throw new Error(`Check 4 Failed: Emergency red-flag was not elevated. Reply: ${emergencyReply}`)
+    }
+    console.log("✓ Check 4 Passed: Emergency red-flag triggers immediate urgent medical alert.")
+
+    // Check 5: Founder Recognition Test
+    const founderRes = await fetch(`${baseUrl}/api/ai/angitia`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: "Who founded Healthitude and where was it created?",
+        history: [],
+      }),
+    })
+    if (founderRes.status !== 200) {
+      throw new Error(`Check 5 Failed: Expected 200, got ${founderRes.status}`)
+    }
+    const founderData = await founderRes.json()
+    const founderReply = founderData.data?.reply || ""
+    if (
+      !founderReply.toLowerCase().includes("bolaji") &&
+      !founderReply.toLowerCase().includes("david") &&
+      !founderReply.toLowerCase().includes("ibadan")
+    ) {
+      throw new Error(`Check 5 Failed: Founder details missing. Reply: ${founderReply}`)
+    }
+    console.log("✓ Check 5 Passed: Founder & University of Ibadan heritage accurately acknowledged.")
+
+    // Check 6: Non-Health Prompt Deflection (e.g. coding / crypto / math)
     const nonHealthRes = await fetch(`${baseUrl}/api/ai/angitia`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -57,32 +121,32 @@ async function runAiTests() {
       }),
     })
     if (nonHealthRes.status !== 200) {
-      throw new Error(`Check 3 Failed: Expected 200, got ${nonHealthRes.status}`)
+      throw new Error(`Check 6 Failed: Expected 200, got ${nonHealthRes.status}`)
     }
     const nonHealthData = await nonHealthRes.json()
-    const replyText = nonHealthData.data?.reply || ""
+    const nonHealthReply = nonHealthData.data?.reply || ""
     if (
-      !replyText.toLowerCase().includes("healthitude") &&
-      !replyText.toLowerCase().includes("health") &&
-      !replyText.toLowerCase().includes("angitia")
+      !nonHealthReply.toLowerCase().includes("healthitude") &&
+      !nonHealthReply.toLowerCase().includes("health") &&
+      !nonHealthReply.toLowerCase().includes("angitia")
     ) {
-      throw new Error(`Check 3 Failed: Non-health prompt was not deflected politely. Reply: ${replyText}`)
+      throw new Error(`Check 6 Failed: Non-health prompt was not deflected politely. Reply: ${nonHealthReply}`)
     }
-    console.log("✓ Check 3 Passed: Non-health prompt strictly and politely deflected to health-only scope.")
+    console.log("✓ Check 6 Passed: Non-health prompt strictly and politely deflected to health-only scope.")
 
-    // Check 4: POST /api/ai/angitia with invalid empty payload
+    // Check 7: Input validation rejects empty messages
     const emptyRes = await fetch(`${baseUrl}/api/ai/angitia`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: "" }),
     })
     if (emptyRes.status !== 400) {
-      throw new Error(`Check 4 Failed: Expected 400 for empty message, got ${emptyRes.status}`)
+      throw new Error(`Check 7 Failed: Expected 400 for empty message, got ${emptyRes.status}`)
     }
-    console.log("✓ Check 4 Passed: Input validation rejects empty messages.")
+    console.log("✓ Check 7 Passed: Input validation rejects empty messages.")
 
     console.log("\n================================================================================")
-    console.log("ALL 4 ANGITIA AI TESTS PASSED (100%)")
+    console.log("ALL 7 ANGITIA AI REBUILD TESTS PASSED (100%)")
     console.log("================================================================================")
   } finally {
     server.close()

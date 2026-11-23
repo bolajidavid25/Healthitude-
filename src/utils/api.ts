@@ -978,7 +978,7 @@ export interface PatientEmergencyStatusResponse {
 // Centralized API Services
 // -----------------------------------------------------------------------------
 export const api = {
-  // Angitia AI Health Assistant (powered by Gemini Flash)
+  // Angitia AI Health Assistant & Platform Co-Pilot
   ai: {
     async chat(
       message: string,
@@ -990,12 +990,36 @@ export const api = {
           reply: string
           source: "gemini" | "fallback"
           timestamp: string
+          isLoggedIn?: boolean
         }
       }>("/api/ai/angitia", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, history }),
       })
+      return res.data
+    },
+    async save(
+      title: string,
+      messages: { role: "user" | "assistant"; text: string; time?: string }[],
+      summary?: string,
+    ) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>("/api/ai/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, messages, summary }),
+      })
+      return res.data
+    },
+    async getHistory() {
+      const res = await fetchApi<{
+        status: string
+        data: any[]
+      }>("/api/ai/history")
       return res.data
     },
   },
