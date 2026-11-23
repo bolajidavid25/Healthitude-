@@ -34,6 +34,7 @@
     "test:step15": "tsx src/step15-verification.test.ts",
     "test:professional": "tsx src/step2-professional.test.ts",
     "test:doctor-patient": "tsx src/doctor-patient-connection.test.ts",
+    "test:ai": "tsx src/ai.test.ts",
     "db:test": "tsx src/test-db.ts",
     "db:inspect": "tsx src/inspect-db.ts",
     "db:verify": "tsx src/verify-migration.ts",

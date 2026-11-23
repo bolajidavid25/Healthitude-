@@ -27,6 +27,10 @@ services:
           type: web
           name: healthitude-web
           property: host
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
 
   # Frontend Static Site (SPA)
   - type: web

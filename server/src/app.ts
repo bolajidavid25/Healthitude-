@@ -10,6 +10,7 @@ import { patientRouter } from "./routes/patient"
 import { authRouter } from "./routes/auth"
 import { professionalRouter as defaultProfessionalRouter } from "./routes/professional"
 import { adminRouter as defaultAdminRouter } from "./routes/admin"
+import { aiRouter as defaultAiRouter } from "./routes/ai"
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler"
 
 export interface AppOptions {
@@ -18,6 +19,7 @@ export interface AppOptions {
   authRouter?: Router
   professionalRouter?: Router
   adminRouter?: Router
+  aiRouter?: Router
 }
 
 /**
@@ -103,6 +105,10 @@ export function createApp(options?: AppOptions): Express {
   // 8. Mount Administrator Portal Subsystem Routes
   const admin = options?.adminRouter || defaultAdminRouter
   app.use("/api/admin", admin)
+
+  // 8.1 Mount Angitia AI Health Assistant Routes
+  const ai = options?.aiRouter || defaultAiRouter
+  app.use("/api/ai", ai)
 
   // 8.5 SPA Catch-all when frontend dist is present (routes not starting with /api)
   if (hasDist) {

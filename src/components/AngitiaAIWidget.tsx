@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
-import { Send, X, AlertCircle, Sparkles, Bot } from "lucide-react"
+import { Send, X, AlertCircle, Sparkles, Bot, HeartPulse } from "lucide-react"
 import AngitiaIcon from "@/components/AngitiaIcon"
+import { api } from "@/utils/api"
 
 const BLUE = "#1a3fcf"
 const NAVY = "#0d1b4b"
@@ -45,36 +46,29 @@ export default function AngitiaAIWidget() {
     return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
-  function handleSend(textToSend?: string) {
+  async function handleSend(textToSend?: string) {
     const text = (textToSend ?? input).trim()
     if (!text || isTyping) return
 
     const userTime = getCurrentTime()
-    setMessages((prev) => [...prev, { role: "user", text, time: userTime }])
+    const updatedMessages: Message[] = [
+      ...messages,
+      { role: "user", text, time: userTime },
+    ]
+    setMessages(updatedMessages)
     setInput("")
     setIsTyping(true)
 
-    // Simulate clinical knowledge response
-    setTimeout(() => {
-      let reply = ""
-      const lower = text.toLowerCase()
+    try {
+      const historyPayload = updatedMessages.slice(-6).map((m) => ({
+        role: m.role,
+        text: m.text,
+      }))
 
-      if (lower.includes("blood pressure") || lower.includes("hypertension")) {
-        reply =
-          "A normal resting blood pressure for adults is typically under 120/80 mmHg. Consistent readings of 130/80 mmHg or higher are classified as hypertension. Routine monitoring and healthy lifestyle habits are essential. Would you like to book a blood pressure review with one of our verified general practitioners?"
-      } else if (lower.includes("telemedicine") || lower.includes("consult") || lower.includes("appointment")) {
-        reply =
-          "Healthitude telemedicine provides end-to-end encrypted video and audio consultations with certified, verified doctors. You can share pre-consultation intake, vital signs, and symptoms, and your doctor can issue digital prescriptions and verified clinical notes immediately during the call."
-      } else if (lower.includes("diabetes") || lower.includes("sugar")) {
-        reply =
-          "Common signs of Type 2 diabetes include increased thirst, frequent urination, unexplained fatigue, and blurred vision. It is diagnosed with an HbA1c or fasting glucose test. Routine follow-ups with our verified clinicians help keep blood glucose in a healthy range."
-      } else if (lower.includes("doctor") || lower.includes("specialist") || lower.includes("gp")) {
-        reply =
-          "General Practitioners (GPs) manage broad day-to-day healthcare and preventive screenings. If specialist care is needed (e.g., Cardiology, Endocrinology), our doctors initiate a seamless Referral where your verified clinical records travel securely to the specialist."
-      } else {
-        reply =
-          "Thank you for your question. As an AI health assistant, I provide general educational information. For personalized clinical advice, diagnosis, or treatment plans, please consult a verified Healthitude healthcare professional through our portal."
-      }
+      const response = await api.ai.chat(text, historyPayload)
+      const reply =
+        response?.reply ||
+        "I hear you, and your health matters deeply. Please rest assured you are in safe hands. For personalized clinical review and diagnosis, our verified Healthitude doctors are available via telemedicine."
 
       setMessages((prev) => [
         ...prev,
@@ -84,8 +78,20 @@ export default function AngitiaAIWidget() {
           time: getCurrentTime(),
         },
       ])
+    } catch {
+      // Calming emergency fallback if offline or network hiccup
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text:
+            "I hear you, and your well-being is of utmost importance. Please take a slow, gentle breath. I am momentarily operating in offline mode, but remember to stay hydrated, rest, and connect with a verified Healthitude doctor if you need clinical evaluation.",
+          time: getCurrentTime(),
+        },
+      ])
+    } finally {
       setIsTyping(false)
-    }, 650)
+    }
   }
 
   return (
@@ -142,11 +148,11 @@ export default function AngitiaAIWidget() {
                     style={{ borderRadius: "9999px" }}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live
+                    Gemini Flash
                   </span>
                 </div>
                 <p className="text-white/70 text-[11px] leading-tight">
-                  Clinical Healthcare Assistant · Educational
+                  Calming Health Companion · Health Questions Only
                 </p>
               </div>
             </div>
@@ -165,7 +171,7 @@ export default function AngitiaAIWidget() {
           <div className="px-3 py-1.5 bg-amber-50/90 border-b border-amber-200/70 text-[11px] text-amber-800 flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
             <span>
-              <strong>Educational only:</strong> Not a medical diagnosis or prescription.
+              <strong>Dedicated Health Companion:</strong> Answers health & wellness topics only. Not a medical diagnosis.
             </span>
           </div>
 
