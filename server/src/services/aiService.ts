@@ -119,9 +119,16 @@ export async function generateAngitiaHealthResponse(
   ).trim()
   const preferredModel =
     rawModel === "gemini-2.5-flash" || !rawModel ? "gemini-3.8-flash" : rawModel
-  // Prioritize gemini-3.8-flash as recommended by Google AI Studio
+  // Prioritize verified models returned by Google AI Studio
   const candidateModels = Array.from(
-    new Set([preferredModel, "gemini-3.8-flash", "gemini-2.5-flash"]),
+    new Set([
+      preferredModel,
+      "gemini-3.8-flash",
+      "gemini-flash-latest",
+      "gemini-3.1-flash-lite",
+      "gemini-2.5-flash-lite",
+      "gemini-flash-lite-latest",
+    ]),
   )
 
   if (!apiKey) {
@@ -134,7 +141,7 @@ export async function generateAngitiaHealthResponse(
   // 1. Primary: Google AI Studio Interactions API (Standard for Gemini 3.8 Flash)
   try {
     const interController = new AbortController()
-    const interTimeout = setTimeout(() => interController.abort(), 12000)
+    const interTimeout = setTimeout(() => interController.abort(), 3000)
 
     const interRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/interactions?key=${apiKey}`,
@@ -197,7 +204,7 @@ export async function generateAngitiaHealthResponse(
       )}:generateContent?key=${apiKey}`
 
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 12000)
+      const timeout = setTimeout(() => controller.abort(), 5000)
 
       const response = await fetch(endpoint, {
         method: "POST",

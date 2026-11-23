@@ -150,6 +150,7 @@ aiRouter.get("/diagnostics", async (_req: Request, res: Response) => {
           "Content-Type": "application/json",
           "x-goog-api-key": apiKey,
         },
+        signal: AbortSignal.timeout(3000),
         body: JSON.stringify({
           model,
           input: "Hello, reply in one sentence.",
@@ -170,7 +171,7 @@ aiRouter.get("/diagnostics", async (_req: Request, res: Response) => {
     interactionsResult = { error: err.message }
   }
 
-  // 2. Try legacy generateContent
+  // 2. Try generateContent
   let generateContentResult: any = null
   try {
     const genRes = await fetch(
@@ -183,6 +184,7 @@ aiRouter.get("/diagnostics", async (_req: Request, res: Response) => {
           "Content-Type": "application/json",
           "x-goog-api-key": apiKey,
         },
+        signal: AbortSignal.timeout(4000),
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: "Hello" }] }],
         }),
