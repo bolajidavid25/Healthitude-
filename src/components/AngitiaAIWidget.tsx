@@ -41,6 +41,83 @@ const INITIAL_MESSAGE: Message = {
   time: "Just now",
 }
 
+function getLocalHealthResponse(userPrompt: string): string {
+  const p = userPrompt.toLowerCase().trim()
+
+  if (
+    p.includes("built") ||
+    p.includes("found") ||
+    p.includes("who made") ||
+    p.includes("who created") ||
+    p.includes("bolaji") ||
+    p.includes("david") ||
+    p.includes("ibadan") ||
+    p.includes("about healthitude") ||
+    p.includes("what is healthitude")
+  ) {
+    return "Healthitude was founded in Ibadan, Nigeria by **Bolaji David**, a student of the prestigious **University of Ibadan**, through the help and grace of God. \n\nHe built Healthitude with a compassionate vision to solve healthcare's greatest hurdles:\n* Eliminating crippling medical costs through transparent category pricing\n* Connecting patients to verified doctors anywhere via [Book a Telemedicine Consultation](/telemedicine)\n* Keeping lifetime medical records safe and accessible\n* Providing instant [Break-Glass Emergency Protocol](/emergency) response."
+  }
+
+  const nonHealthKeywords = [
+    "code",
+    "python",
+    "javascript",
+    "html",
+    "css",
+    "sql",
+    "math",
+    "calculate",
+    "crypto",
+    "bitcoin",
+    "stock market",
+    "movie",
+    "song",
+    "football",
+    "president",
+    "politics",
+    "game",
+    "homework",
+  ]
+  if (nonHealthKeywords.some((k) => p.includes(k))) {
+    return "I am Angitia, your dedicated Healthitude health companion. My purpose is exclusively devoted to your health, wellness, and medical peace of mind. How can I support your health or well-being today?"
+  }
+
+  if (
+    p.includes("chest pain") ||
+    p.includes("heart attack") ||
+    p.includes("can't breathe") ||
+    p.includes("shortness of breath") ||
+    p.includes("stroke") ||
+    p.includes("unconscious")
+  ) {
+    return "⚠️ **Urgent Medical Notice:** Severe chest pain, sudden numbness, or difficulty breathing require immediate emergency medical attention. Please contact your nearest emergency department immediately or trigger our emergency protocol: [Break-Glass Emergency Protocol](/emergency)."
+  }
+
+  if (
+    p.includes("book") ||
+    p.includes("see a doctor") ||
+    p.includes("consult") ||
+    p.includes("appointment") ||
+    p.includes("specialist")
+  ) {
+    return "On Healthitude, you can easily connect with verified general practitioners and specialists for confidential consultations from the comfort of your home. You can schedule or start an instant consultation here: [Book a Telemedicine Consultation](/telemedicine)."
+  }
+
+  if (p.includes("headache") || p.includes("migraine")) {
+    return "I understand headaches can be very draining and uncomfortable. Common causes include dehydration, tension, eye strain, lack of sleep, or sinus pressure. \n\n* Rest in a quiet, dimly lit room\n* Sip clean cool water\n* Gently massage your temples and neck muscles\n\nIf your headache is sudden and unusually severe ('thunderclap'), accompanied by fever, neck stiffness, or vision changes, please seek emergency medical care or book an immediate review: [Book a Telemedicine Consultation](/telemedicine)."
+  }
+
+  if (p.includes("dizzy") || p.includes("dizziness") || p.includes("lightheaded")) {
+    return "Feeling dizzy can be very unsettling. Please take gentle care of yourself:\n\n* Sit or lie down in a safe position immediately\n* Avoid sudden head turns\n* Slowly sip clean water or electrolyte fluids\n\nIf dizziness persists or is accompanied by chest pain or slurred speech, please consult a verified doctor: [Book a Telemedicine Consultation](/telemedicine)."
+  }
+
+  if (p.includes("malaria") || p.includes("fever") || p.includes("chills") || p.includes("typhoid")) {
+    return "Fever and chills should always be treated with gentle care and attention. In tropical regions, fever can be a sign of malaria, typhoid, or a viral infection. \n\n* Rest and stay well hydrated with clean water or electrolyte fluids\n* Avoid self-medicating with unconfirmed antimalarials\n* Have a rapid diagnostic test (RDT) done and consult a verified doctor: [Book a Telemedicine Consultation](/telemedicine)."
+  }
+
+  return "Thank you for reaching out to me. Your health and peace of mind are deeply precious. While I can offer sound educational guidance on symptoms, wellness, and health management, nothing replaces the personalized insight of a licensed doctor. Take a gentle breath, stay well hydrated, and consider booking a video consultation with one of our verified Healthitude professionals: [Book a Telemedicine Consultation](/telemedicine)."
+}
+
 /**
  * Standard Markdown renderer for Angitia responses.
  * Converts lists, bold, headers, and links into beautifully styled elements without raw symbols.
@@ -194,10 +271,16 @@ export default function AngitiaAIWidget() {
         text: m.text,
       }))
 
-      const response = await api.ai.chat(text, historyPayload)
-      const reply =
-        response?.reply ||
-        "I hear you, and your health matters deeply. For personalized clinical review and diagnosis, our verified Healthitude doctors are available: [Book a Telemedicine Consultation](/telemedicine)."
+      let response
+      try {
+        response = await api.ai.chat(text, historyPayload)
+      } catch {
+        // Fast retry after 800ms in case the server was in a wake-up / restart cycle
+        await new Promise((r) => setTimeout(r, 800))
+        response = await api.ai.chat(text, historyPayload)
+      }
+
+      const reply = response?.reply || getLocalHealthResponse(text)
 
       setMessages((prev) => [
         ...prev,
@@ -208,12 +291,12 @@ export default function AngitiaAIWidget() {
         },
       ])
     } catch (err) {
-      console.warn("[Angitia AI] Connection error, using offline response:", err)
+      console.warn("[Angitia AI] Connection error, using intelligent offline response:", err)
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: "Thank you for reaching out. Please take a gentle breath and stay well hydrated. Our verified doctors are available for confidential medical evaluations whenever you need: [Book a Telemedicine Consultation](/telemedicine).",
+          text: getLocalHealthResponse(text),
           time: getCurrentTime(),
         },
       ])
