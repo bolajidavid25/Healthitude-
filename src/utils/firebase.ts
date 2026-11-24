@@ -6,13 +6,24 @@ import {
   type Auth,
 } from "firebase/auth"
 
+// Public Firebase Web App config (Firebase client keys are public identifiers, not secrets;
+// env vars override these defaults if provided).
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey:
+    import.meta.env.VITE_FIREBASE_API_KEY ||
+    "AIzaSyDU6iAqY5_bfs2Hkjs0Dbm-Nmg7wOooRzM",
+  authDomain:
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
+    "healthitude-9a7b4.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "healthitude-9a7b4",
+  storageBucket:
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
+    "healthitude-9a7b4.firebasestorage.app",
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1004897833255",
+  appId:
+    import.meta.env.VITE_FIREBASE_APP_ID ||
+    "1:1004897833255:web:99c3a8f13f22bf92f59902",
 }
 
 export function isFirebaseClientConfigured(): boolean {

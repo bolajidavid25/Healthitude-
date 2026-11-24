@@ -30,6 +30,12 @@ services:
         sync: false
       - key: GEMINI_MODEL
         value: gemini-3.8-flash
+      - key: FIREBASE_PROJECT_ID
+        value: healthitude-9a7b4
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
 
   # Frontend Static Site (SPA)
   - type: web
