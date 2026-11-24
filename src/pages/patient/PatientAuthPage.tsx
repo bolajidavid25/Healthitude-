@@ -21,6 +21,8 @@ import {
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator"
 import { isPasswordStrong } from "@/utils/passwordStrength"
 import { explainError, extractFieldErrors } from "@/utils/errorExplainer"
+import { signInWithGooglePopup } from "@/utils/firebase"
+import { GoogleAuthButton } from "@/components/GoogleAuthButton"
 
 const BLUE = "#1a3fcf"
 
@@ -296,12 +298,20 @@ function Step1({
   errors,
   photoPreview,
   onPhotoSelected,
+  googleEmail,
+  onClearGoogle,
+  onGoogleClick,
+  isGoogleLoading,
 }: {
   formData: RegistrationState
   setField: (k: keyof RegistrationState, v: any) => void
   errors: Record<string, string>
   photoPreview: string | null
   onPhotoSelected: (f: File | null) => void
+  googleEmail: string | null
+  onClearGoogle: () => void
+  onGoogleClick: () => void
+  isGoogleLoading: boolean
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -314,6 +324,33 @@ function Step1({
 
   return (
     <div className="space-y-4">
+      {googleEmail ? (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center justify-between gap-2">
+          <span>
+            Verified with Google as <strong>{googleEmail}</strong>. No password required.
+          </span>
+          <button
+            type="button"
+            onClick={onClearGoogle}
+            className="text-emerald-700 underline font-medium cursor-pointer"
+          >
+            Use password
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <GoogleAuthButton
+            onClick={onGoogleClick}
+            loading={isGoogleLoading}
+            label="Sign up with Google"
+          />
+          <div className="relative flex items-center">
+            <div className="flex-grow border-t border-gray-200" />
+            <span className="mx-3 text-xs text-gray-400">or register with email</span>
+            <div className="flex-grow border-t border-gray-200" />
+          </div>
+        </div>
+      )}
       <div className="flex items-center gap-4">
         <div
           onClick={() => fileInputRef.current?.click()}
@@ -462,71 +499,75 @@ function Step1({
           error={!!getFieldError(errors, "account.phoneNumber", "phoneNumber")}
         />
       </Field>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Field
-          label="Password"
-          required
-          error={getFieldError(errors, "account.password", "password")}
-        >
-          <Input
-            type="password"
-            value={formData.password}
-            onChange={(e) => setField("password", e.target.value)}
-            placeholder="Min. 8 chars (letters, numbers, symbols)"
-            error={!!getFieldError(errors, "account.password", "password")}
-          />
-        </Field>
-        <Field
-          label="Confirm password"
-          required
-          error={
-            formData.confirmPassword &&
-            formData.password === formData.confirmPassword
-              ? undefined
-              : getFieldError(
-                  errors,
-                  "account.confirmPassword",
-                  "confirmPassword",
-                )
-          }
-        >
-          <Input
-            type="password"
-            value={formData.confirmPassword}
-            onChange={(e) => setField("confirmPassword", e.target.value)}
-            placeholder={
-              isPasswordStrong(formData.password)
-                ? "Re-enter your password"
-                : "Locked until password turns green"
-            }
-            disabled={!isPasswordStrong(formData.password)}
-            error={
-              formData.confirmPassword &&
-              formData.password === formData.confirmPassword
-                ? false
-                : !!getFieldError(
-                    errors,
-                    "account.confirmPassword",
-                    "confirmPassword",
-                  )
-            }
-          />
-          {!isPasswordStrong(formData.password) ? (
-            <p className="text-[11px] text-amber-600 mt-1">
-              Turn password <strong className="text-emerald-700">green (strong)</strong> to enable confirmation.
-            </p>
-          ) : formData.confirmPassword &&
-            formData.password === formData.confirmPassword ? (
-            <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
-              <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-              Passwords match
-            </p>
-          ) : null}
-        </Field>
-      </div>
+      {!googleEmail && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Field
+              label="Password"
+              required
+              error={getFieldError(errors, "account.password", "password")}
+            >
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setField("password", e.target.value)}
+                placeholder="Min. 8 chars (letters, numbers, symbols)"
+                error={!!getFieldError(errors, "account.password", "password")}
+              />
+            </Field>
+            <Field
+              label="Confirm password"
+              required
+              error={
+                formData.confirmPassword &&
+                formData.password === formData.confirmPassword
+                  ? undefined
+                  : getFieldError(
+                      errors,
+                      "account.confirmPassword",
+                      "confirmPassword",
+                    )
+              }
+            >
+              <Input
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setField("confirmPassword", e.target.value)}
+                placeholder={
+                  isPasswordStrong(formData.password)
+                    ? "Re-enter your password"
+                    : "Locked until password turns green"
+                }
+                disabled={!isPasswordStrong(formData.password)}
+                error={
+                  formData.confirmPassword &&
+                  formData.password === formData.confirmPassword
+                    ? false
+                    : !!getFieldError(
+                        errors,
+                        "account.confirmPassword",
+                        "confirmPassword",
+                      )
+                }
+              />
+              {!isPasswordStrong(formData.password) ? (
+                <p className="text-[11px] text-amber-600 mt-1">
+                  Turn password <strong className="text-emerald-700">green (strong)</strong> to enable confirmation.
+                </p>
+              ) : formData.confirmPassword &&
+                formData.password === formData.confirmPassword ? (
+                <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                  Passwords match
+                </p>
+              ) : null}
+            </Field>
+          </div>
 
-      {/* Dynamic Password Strength Indicator */}
-      <PasswordStrengthIndicator password={formData.password} />
+          {/* Dynamic Password Strength Indicator */}
+          <PasswordStrengthIndicator password={formData.password} />
+        </>
+      )}
     </div>
   )
 }
@@ -1122,8 +1163,11 @@ export default function PatientAuthPage({
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [selectedDocFile, setSelectedDocFile] = useState<File | null>(null)
+  const [googleIdToken, setGoogleIdToken] = useState<string | null>(null)
+  const [googleEmail, setGoogleEmail] = useState<string | null>(null)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-  const { login } = useAuth()
+  const { login, refreshUser } = useAuth()
   const navigate = useNavigate()
   const TOTAL = 5
 
@@ -1290,6 +1334,47 @@ export default function PatientAuthPage({
     }
   }
 
+  async function handleGoogleAuth() {
+    setLoginError(null)
+    setGlobalError(null)
+    setIsGoogleLoading(true)
+    try {
+      const g = await signInWithGooglePopup()
+      const res = await api.auth.googleLogin(g.idToken)
+
+      if (res.needsOnboarding) {
+        const gp = res.googleProfile
+        setGoogleIdToken(g.idToken)
+        setGoogleEmail(gp?.email || g.email)
+        setFormData((prev) => ({
+          ...prev,
+          firstName: gp?.firstName || prev.firstName,
+          lastName: gp?.lastName || prev.lastName,
+          email: gp?.email || g.email,
+        }))
+        if (gp?.picture && !photoPreview) {
+          setPhotoPreview(gp.picture)
+        }
+        setMode("register")
+        setStep(1)
+        navigate("/patient/register", { replace: true })
+        return
+      }
+
+      await refreshUser()
+      navigate("/patient/dashboard")
+    } catch (err: any) {
+      const msg =
+        err?.code === "auth/popup-closed-by-user"
+          ? "Google sign-in popup was closed before completing."
+          : explainError(err, "Google sign-in failed. Please try again.")
+      if (mode === "login") setLoginError(msg)
+      else setGlobalError(msg)
+    } finally {
+      setIsGoogleLoading(false)
+    }
+  }
+
   function validateStep1(): boolean {
     const errors: Record<string, string> = {}
     if (!formData.firstName.trim())
@@ -1316,21 +1401,23 @@ export default function PatientAuthPage({
       errors["account.phoneNumber"] = "Phone number is required"
     }
 
-    // Password strength check & confirmation gating
-    if (!formData.password) {
-      errors["account.password"] = "Password is required"
-    } else if (!isPasswordStrong(formData.password)) {
-      errors["account.password"] =
-        "Password must turn green (satisfy all strength criteria) to continue"
-    }
+    // Password strength check & confirmation gating (skipped when registering with Google)
+    if (!googleIdToken) {
+      if (!formData.password) {
+        errors["account.password"] = "Password is required"
+      } else if (!isPasswordStrong(formData.password)) {
+        errors["account.password"] =
+          "Password must turn green (satisfy all strength criteria) to continue"
+      }
 
-    if (!isPasswordStrong(formData.password)) {
-      errors["account.confirmPassword"] =
-        "Confirmation is locked until the password check turns green"
-    } else if (!formData.confirmPassword) {
-      errors["account.confirmPassword"] = "Please confirm your password"
-    } else if (formData.password !== formData.confirmPassword) {
-      errors["account.confirmPassword"] = "Passwords do not match"
+      if (!isPasswordStrong(formData.password)) {
+        errors["account.confirmPassword"] =
+          "Confirmation is locked until the password check turns green"
+      } else if (!formData.confirmPassword) {
+        errors["account.confirmPassword"] = "Please confirm your password"
+      } else if (formData.password !== formData.confirmPassword) {
+        errors["account.confirmPassword"] = "Passwords do not match"
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -1481,14 +1568,23 @@ export default function PatientAuthPage({
     }
 
     try {
-      // 1. Submit registration
-      await api.patient.register(payload)
+      if (googleIdToken) {
+        // 1. Submit Google-verified registration (also issues session cookies)
+        await api.auth.googleRegister({
+          idToken: googleIdToken,
+          ...payload,
+        })
+        await refreshUser()
+      } else {
+        // 1. Submit standard registration
+        await api.patient.register(payload)
 
-      // 2. Authenticate session
-      await login({
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-      })
+        // 2. Authenticate session
+        await login({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+        })
+      }
 
       // 3. Upload photo if selected
       if (selectedPhotoFile) {
@@ -1700,7 +1796,7 @@ export default function PatientAuthPage({
 
             <button
               onClick={handleLogin}
-              disabled={isLoggingIn}
+              disabled={isLoggingIn || isGoogleLoading}
               className="btn-send !w-full !py-3 text-white font-semibold"
             >
               {isLoggingIn ? (
@@ -1715,6 +1811,19 @@ export default function PatientAuthPage({
                 </span>
               )}
             </button>
+
+            <div className="relative flex items-center my-1">
+              <div className="flex-grow border-t border-gray-200" />
+              <span className="mx-3 text-xs text-gray-400">or</span>
+              <div className="flex-grow border-t border-gray-200" />
+            </div>
+
+            <GoogleAuthButton
+              onClick={handleGoogleAuth}
+              loading={isGoogleLoading}
+              disabled={isLoggingIn}
+              label="Continue with Google"
+            />
             <p className="text-center text-sm text-gray-500">
               <button className="text-blue-600 hover:underline">
                 Forgot your password?
@@ -1778,6 +1887,13 @@ export default function PatientAuthPage({
                 errors={fieldErrors}
                 photoPreview={photoPreview}
                 onPhotoSelected={handlePhotoSelected}
+                googleEmail={googleEmail}
+                onClearGoogle={() => {
+                  setGoogleIdToken(null)
+                  setGoogleEmail(null)
+                }}
+                onGoogleClick={handleGoogleAuth}
+                isGoogleLoading={isGoogleLoading}
               />
             )}
             {step === 2 && (

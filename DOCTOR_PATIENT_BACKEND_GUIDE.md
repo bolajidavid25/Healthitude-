@@ -152,3 +152,35 @@ npm run dev
   - `VITE_API_BASE_URL=https://<your-backend-render-domain>`
 
 > **Cross-Domain Cookie Note for Render**: If the frontend and backend are hosted on different Render subdomains (e.g. `healthitude-web.onrender.com` and `healthitude-api.onrender.com`), configure a custom domain with shared parent site (e.g. `app.yourdomain.com` & `api.yourdomain.com`) or proxy `/api/*` through Render Rewrite Rules on the Static Site so `SameSite=Lax` cookies work seamlessly in all browsers.
+
+---
+
+## 7. Firebase Google Sign-In & Sign-Up Integration
+
+Healthitude supports **Continue with Google** on both the **Patient Portal** and **Doctor/Professional Portal** (Admins remain email/password only).
+
+### How It Works
+1. **Frontend (`src/utils/firebase.ts`, `src/components/GoogleAuthButton.tsx`)**:
+   - Uses Firebase Web SDK (`signInWithPopup` + `GoogleAuthProvider`) to obtain a verified Firebase ID Token.
+2. **Backend (`server/src/config/firebase.ts`, `server/src/services/googleAuthService.ts`, `server/src/controllers/googleAuthController.ts`)**:
+   - Cryptographically verifies the Firebase ID Token via `firebase-admin` (never trusting raw client email).
+   - **Patient Endpoints**:
+     - `POST /api/auth/google` — Signs in existing patients (issuing standard `HttpOnly` session + CSRF cookies), or returns `needsOnboarding: true` with verified Google profile (`email`, `firstName`, `lastName`, `picture`) for new users.
+     - `POST /api/auth/google/register` — Completes registration with all 7 mandatory consents + health profile without requiring a user-typed password, then signs the patient in immediately.
+   - **Professional Endpoints**:
+     - `POST /api/professional/google` — Signs in existing professionals, or returns `needsRegistration: true` with verified Google profile.
+     - `POST /api/professional/google/register` — Completes doctor registration (still requiring medical licence, regulatory body, specialty, facility, and initializing `verificationStatus = PENDING` for admin approval).
+
+### Required Render Environment Variables for Firebase
+- **Backend Web Service (`server/`)**:
+  - `FIREBASE_PROJECT_ID`
+  - `FIREBASE_CLIENT_EMAIL`
+  - `FIREBASE_PRIVATE_KEY` (from Firebase Service Account JSON; escaped `\n` newlines are automatically handled)
+- **Frontend Static Site**:
+  - `VITE_FIREBASE_API_KEY`
+  - `VITE_FIREBASE_AUTH_DOMAIN`
+  - `VITE_FIREBASE_PROJECT_ID`
+  - `VITE_FIREBASE_STORAGE_BUCKET`
+  - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+  - `VITE_FIREBASE_APP_ID`
+- **Firebase Console**: Add your Render frontend domain under **Authentication → Settings → Authorized domains**.

@@ -34,6 +34,7 @@
     "test:step15": "tsx src/step15-verification.test.ts",
     "test:professional": "tsx src/step2-professional.test.ts",
     "test:doctor-patient": "tsx src/doctor-patient-connection.test.ts",
+    "test:firebase": "tsx src/firebase-google-auth.test.ts",
     "db:test": "tsx src/test-db.ts",
     "db:inspect": "tsx src/inspect-db.ts",
     "db:verify": "tsx src/verify-migration.ts",
@@ -60,6 +61,7 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "express": "^5.3.0",
+    "firebase-admin": "^14.5.1",
     "multer": "^2.4.0",
     "pg": "^8.23.1",
     "zod": "^3.25.76"

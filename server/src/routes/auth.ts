@@ -16,6 +16,10 @@ import {
   getCsrfHandler,
   changePasswordHandler,
 } from "../controllers/authController"
+import {
+  googlePatientAuthHandler,
+  googlePatientRegisterHandler,
+} from "../controllers/googleAuthController"
 
 export const authRouter = Router()
 
@@ -34,6 +38,12 @@ authRouter.post(
   loginRateLimiter,
   validateBody(loginSchema),
   loginHandler,
+)
+authRouter.post("/google", loginRateLimiter, googlePatientAuthHandler)
+authRouter.post(
+  "/google/register",
+  registrationRateLimiter,
+  googlePatientRegisterHandler,
 )
 
 /**

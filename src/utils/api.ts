@@ -967,6 +967,51 @@ export const api = {
       return res.data
     },
 
+    async googleLogin(idToken: string) {
+      const res = await fetchApi<{
+        status: string
+        needsOnboarding?: boolean
+        message: string
+        data: {
+          needsOnboarding: boolean
+          user?: AuthUser
+          csrfToken?: string
+          session?: { id: string; expiresAt: string }
+          googleProfile?: {
+            email: string
+            firstName: string
+            lastName: string
+            name: string
+            picture: string | null
+          }
+        }
+      }>("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      })
+      if (res.data?.csrfToken) setCachedCsrfToken(res.data.csrfToken)
+      return res.data
+    },
+
+    async googleRegister(payload: any) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: {
+          user: AuthUser
+          csrfToken: string
+          session: { id: string; expiresAt: string }
+        }
+      }>("/api/auth/google/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (res.data?.csrfToken) setCachedCsrfToken(res.data.csrfToken)
+      return res.data
+    },
+
     async logout() {
       try {
         await fetchApi<{ status: string message: string }>("/api/auth/logout", {
@@ -1624,6 +1669,42 @@ export const api = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
+      })
+    },
+
+    async googleLogin(idToken: string) {
+      return fetchApi<{
+        status: string
+        needsRegistration?: boolean
+        message: string
+        professional?: ProfessionalItem
+        hasCsrfToken?: boolean
+        data?: {
+          needsRegistration?: boolean
+          googleProfile?: {
+            email: string
+            firstName: string
+            lastName: string
+            name: string
+            picture: string | null
+          }
+        }
+      }>("/api/professional/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      })
+    },
+
+    async googleRegister(payload: any) {
+      return fetchApi<{
+        status: string
+        message: string
+        data: ProfessionalItem
+      }>("/api/professional/google/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       })
     },
 
