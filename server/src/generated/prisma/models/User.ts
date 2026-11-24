@@ -251,6 +251,7 @@ export type UserWhereInput = {
   appointments?: Prisma.AppointmentListRelationFilter
   emergencyCases?: Prisma.EmergencyCaseListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  angitiaChats?: Prisma.AngitiaChatRecordListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -279,6 +280,7 @@ export type UserOrderByWithRelationInput = {
   appointments?: Prisma.AppointmentOrderByRelationAggregateInput
   emergencyCases?: Prisma.EmergencyCaseOrderByRelationAggregateInput
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
+  angitiaChats?: Prisma.AngitiaChatRecordOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -310,6 +312,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   appointments?: Prisma.AppointmentListRelationFilter
   emergencyCases?: Prisma.EmergencyCaseListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  angitiaChats?: Prisma.AngitiaChatRecordListRelationFilter
 }, "id" | "email" | "phoneNumber">
 
 export type UserOrderByWithAggregationInput = {
@@ -374,6 +377,7 @@ export type UserCreateInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -402,6 +406,7 @@ export type UserUncheckedCreateInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -430,6 +435,7 @@ export type UserUpdateInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -458,6 +464,7 @@ export type UserUncheckedUpdateInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -753,6 +760,20 @@ export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
 }
 
+export type UserCreateNestedOneWithoutAngitiaChatsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAngitiaChatsInput, Prisma.UserUncheckedCreateWithoutAngitiaChatsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAngitiaChatsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAngitiaChatsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAngitiaChatsInput, Prisma.UserUncheckedCreateWithoutAngitiaChatsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAngitiaChatsInput
+  upsert?: Prisma.UserUpsertWithoutAngitiaChatsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAngitiaChatsInput, Prisma.UserUpdateWithoutAngitiaChatsInput>, Prisma.UserUncheckedUpdateWithoutAngitiaChatsInput>
+}
+
 export type UserCreateWithoutAddressInput = {
   id?: string
   firstName: string
@@ -778,6 +799,7 @@ export type UserCreateWithoutAddressInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAddressInput = {
@@ -805,6 +827,7 @@ export type UserUncheckedCreateWithoutAddressInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAddressInput = {
@@ -848,6 +871,7 @@ export type UserUpdateWithoutAddressInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAddressInput = {
@@ -875,6 +899,7 @@ export type UserUncheckedUpdateWithoutAddressInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutEmergencyContactInput = {
@@ -902,6 +927,7 @@ export type UserCreateWithoutEmergencyContactInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutEmergencyContactInput = {
@@ -929,6 +955,7 @@ export type UserUncheckedCreateWithoutEmergencyContactInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutEmergencyContactInput = {
@@ -972,6 +999,7 @@ export type UserUpdateWithoutEmergencyContactInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEmergencyContactInput = {
@@ -999,6 +1027,7 @@ export type UserUncheckedUpdateWithoutEmergencyContactInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutHealthProfileInput = {
@@ -1026,6 +1055,7 @@ export type UserCreateWithoutHealthProfileInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutHealthProfileInput = {
@@ -1053,6 +1083,7 @@ export type UserUncheckedCreateWithoutHealthProfileInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutHealthProfileInput = {
@@ -1096,6 +1127,7 @@ export type UserUpdateWithoutHealthProfileInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutHealthProfileInput = {
@@ -1123,6 +1155,7 @@ export type UserUncheckedUpdateWithoutHealthProfileInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPatientCategoryInput = {
@@ -1150,6 +1183,7 @@ export type UserCreateWithoutPatientCategoryInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPatientCategoryInput = {
@@ -1177,6 +1211,7 @@ export type UserUncheckedCreateWithoutPatientCategoryInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPatientCategoryInput = {
@@ -1220,6 +1255,7 @@ export type UserUpdateWithoutPatientCategoryInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPatientCategoryInput = {
@@ -1247,6 +1283,7 @@ export type UserUncheckedUpdateWithoutPatientCategoryInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutConsentsInput = {
@@ -1274,6 +1311,7 @@ export type UserCreateWithoutConsentsInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutConsentsInput = {
@@ -1301,6 +1339,7 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutConsentsInput = {
@@ -1344,6 +1383,7 @@ export type UserUpdateWithoutConsentsInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutConsentsInput = {
@@ -1371,6 +1411,7 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -1398,6 +1439,7 @@ export type UserCreateWithoutSessionsInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -1425,6 +1467,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1468,6 +1511,7 @@ export type UserUpdateWithoutSessionsInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -1495,6 +1539,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutComplaintsInput = {
@@ -1522,6 +1567,7 @@ export type UserCreateWithoutComplaintsInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutComplaintsInput = {
@@ -1549,6 +1595,7 @@ export type UserUncheckedCreateWithoutComplaintsInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutComplaintsInput = {
@@ -1592,6 +1639,7 @@ export type UserUpdateWithoutComplaintsInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutComplaintsInput = {
@@ -1619,6 +1667,7 @@ export type UserUncheckedUpdateWithoutComplaintsInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutClinicalRecordsInput = {
@@ -1646,6 +1695,7 @@ export type UserCreateWithoutClinicalRecordsInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalRecordsInput = {
@@ -1673,6 +1723,7 @@ export type UserUncheckedCreateWithoutClinicalRecordsInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalRecordsInput = {
@@ -1716,6 +1767,7 @@ export type UserUpdateWithoutClinicalRecordsInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalRecordsInput = {
@@ -1743,6 +1795,7 @@ export type UserUncheckedUpdateWithoutClinicalRecordsInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPrescriptionsInput = {
@@ -1770,6 +1823,7 @@ export type UserCreateWithoutPrescriptionsInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPrescriptionsInput = {
@@ -1797,6 +1851,7 @@ export type UserUncheckedCreateWithoutPrescriptionsInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPrescriptionsInput = {
@@ -1840,6 +1895,7 @@ export type UserUpdateWithoutPrescriptionsInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPrescriptionsInput = {
@@ -1867,6 +1923,7 @@ export type UserUncheckedUpdateWithoutPrescriptionsInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAdherenceLogsInput = {
@@ -1894,6 +1951,7 @@ export type UserCreateWithoutAdherenceLogsInput = {
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAdherenceLogsInput = {
@@ -1921,6 +1979,7 @@ export type UserUncheckedCreateWithoutAdherenceLogsInput = {
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAdherenceLogsInput = {
@@ -1964,6 +2023,7 @@ export type UserUpdateWithoutAdherenceLogsInput = {
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAdherenceLogsInput = {
@@ -1991,6 +2051,7 @@ export type UserUncheckedUpdateWithoutAdherenceLogsInput = {
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAppointmentsInput = {
@@ -2018,6 +2079,7 @@ export type UserCreateWithoutAppointmentsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAppointmentsInput = {
@@ -2045,6 +2107,7 @@ export type UserUncheckedCreateWithoutAppointmentsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAppointmentsInput = {
@@ -2088,6 +2151,7 @@ export type UserUpdateWithoutAppointmentsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAppointmentsInput = {
@@ -2115,6 +2179,7 @@ export type UserUncheckedUpdateWithoutAppointmentsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutEmergencyCasesInput = {
@@ -2142,6 +2207,7 @@ export type UserCreateWithoutEmergencyCasesInput = {
   adherenceLogs?: Prisma.MedicationAdherenceCreateNestedManyWithoutPatientInput
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutEmergencyCasesInput = {
@@ -2169,6 +2235,7 @@ export type UserUncheckedCreateWithoutEmergencyCasesInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUncheckedCreateNestedManyWithoutPatientInput
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutEmergencyCasesInput = {
@@ -2212,6 +2279,7 @@ export type UserUpdateWithoutEmergencyCasesInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUpdateManyWithoutPatientNestedInput
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEmergencyCasesInput = {
@@ -2239,6 +2307,7 @@ export type UserUncheckedUpdateWithoutEmergencyCasesInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUncheckedUpdateManyWithoutPatientNestedInput
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -2266,6 +2335,7 @@ export type UserCreateWithoutNotificationsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceCreateNestedManyWithoutPatientInput
   appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
+  angitiaChats?: Prisma.AngitiaChatRecordCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -2293,6 +2363,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUncheckedCreateNestedManyWithoutPatientInput
   appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -2336,6 +2407,7 @@ export type UserUpdateWithoutNotificationsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUpdateManyWithoutPatientNestedInput
   appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -2363,6 +2435,135 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   adherenceLogs?: Prisma.MedicationAdherenceUncheckedUpdateManyWithoutPatientNestedInput
   appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
   emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
+  angitiaChats?: Prisma.AngitiaChatRecordUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAngitiaChatsInput = {
+  id?: string
+  firstName: string
+  middleName?: string | null
+  lastName: string
+  dateOfBirth: Date | string
+  sex: $Enums.Sex
+  email: string
+  phoneNumber: string
+  passwordHash: string
+  profilePhoto?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  address?: Prisma.AddressCreateNestedOneWithoutUserInput
+  emergencyContact?: Prisma.EmergencyContactCreateNestedOneWithoutUserInput
+  healthProfile?: Prisma.HealthProfileCreateNestedOneWithoutUserInput
+  patientCategory?: Prisma.PatientCategoryRecordCreateNestedOneWithoutUserInput
+  consents?: Prisma.ConsentRecordCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutPatientInput
+  clinicalRecords?: Prisma.ClinicalRecordCreateNestedManyWithoutPatientInput
+  prescriptions?: Prisma.PrescriptionCreateNestedManyWithoutPatientInput
+  adherenceLogs?: Prisma.MedicationAdherenceCreateNestedManyWithoutPatientInput
+  appointments?: Prisma.AppointmentCreateNestedManyWithoutPatientInput
+  emergencyCases?: Prisma.EmergencyCaseCreateNestedManyWithoutPatientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAngitiaChatsInput = {
+  id?: string
+  firstName: string
+  middleName?: string | null
+  lastName: string
+  dateOfBirth: Date | string
+  sex: $Enums.Sex
+  email: string
+  phoneNumber: string
+  passwordHash: string
+  profilePhoto?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  address?: Prisma.AddressUncheckedCreateNestedOneWithoutUserInput
+  emergencyContact?: Prisma.EmergencyContactUncheckedCreateNestedOneWithoutUserInput
+  healthProfile?: Prisma.HealthProfileUncheckedCreateNestedOneWithoutUserInput
+  patientCategory?: Prisma.PatientCategoryRecordUncheckedCreateNestedOneWithoutUserInput
+  consents?: Prisma.ConsentRecordUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutPatientInput
+  clinicalRecords?: Prisma.ClinicalRecordUncheckedCreateNestedManyWithoutPatientInput
+  prescriptions?: Prisma.PrescriptionUncheckedCreateNestedManyWithoutPatientInput
+  adherenceLogs?: Prisma.MedicationAdherenceUncheckedCreateNestedManyWithoutPatientInput
+  appointments?: Prisma.AppointmentUncheckedCreateNestedManyWithoutPatientInput
+  emergencyCases?: Prisma.EmergencyCaseUncheckedCreateNestedManyWithoutPatientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAngitiaChatsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAngitiaChatsInput, Prisma.UserUncheckedCreateWithoutAngitiaChatsInput>
+}
+
+export type UserUpsertWithoutAngitiaChatsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAngitiaChatsInput, Prisma.UserUncheckedUpdateWithoutAngitiaChatsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAngitiaChatsInput, Prisma.UserUncheckedCreateWithoutAngitiaChatsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAngitiaChatsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAngitiaChatsInput, Prisma.UserUncheckedUpdateWithoutAngitiaChatsInput>
+}
+
+export type UserUpdateWithoutAngitiaChatsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  middleName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePhoto?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  address?: Prisma.AddressUpdateOneWithoutUserNestedInput
+  emergencyContact?: Prisma.EmergencyContactUpdateOneWithoutUserNestedInput
+  healthProfile?: Prisma.HealthProfileUpdateOneWithoutUserNestedInput
+  patientCategory?: Prisma.PatientCategoryRecordUpdateOneWithoutUserNestedInput
+  consents?: Prisma.ConsentRecordUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutPatientNestedInput
+  clinicalRecords?: Prisma.ClinicalRecordUpdateManyWithoutPatientNestedInput
+  prescriptions?: Prisma.PrescriptionUpdateManyWithoutPatientNestedInput
+  adherenceLogs?: Prisma.MedicationAdherenceUpdateManyWithoutPatientNestedInput
+  appointments?: Prisma.AppointmentUpdateManyWithoutPatientNestedInput
+  emergencyCases?: Prisma.EmergencyCaseUpdateManyWithoutPatientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAngitiaChatsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  middleName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePhoto?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  address?: Prisma.AddressUncheckedUpdateOneWithoutUserNestedInput
+  emergencyContact?: Prisma.EmergencyContactUncheckedUpdateOneWithoutUserNestedInput
+  healthProfile?: Prisma.HealthProfileUncheckedUpdateOneWithoutUserNestedInput
+  patientCategory?: Prisma.PatientCategoryRecordUncheckedUpdateOneWithoutUserNestedInput
+  consents?: Prisma.ConsentRecordUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutPatientNestedInput
+  clinicalRecords?: Prisma.ClinicalRecordUncheckedUpdateManyWithoutPatientNestedInput
+  prescriptions?: Prisma.PrescriptionUncheckedUpdateManyWithoutPatientNestedInput
+  adherenceLogs?: Prisma.MedicationAdherenceUncheckedUpdateManyWithoutPatientNestedInput
+  appointments?: Prisma.AppointmentUncheckedUpdateManyWithoutPatientNestedInput
+  emergencyCases?: Prisma.EmergencyCaseUncheckedUpdateManyWithoutPatientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -2380,6 +2581,7 @@ export type UserCountOutputType = {
   appointments: number
   emergencyCases: number
   notifications: number
+  angitiaChats: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2392,6 +2594,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   appointments?: boolean | UserCountOutputTypeCountAppointmentsArgs
   emergencyCases?: boolean | UserCountOutputTypeCountEmergencyCasesArgs
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
+  angitiaChats?: boolean | UserCountOutputTypeCountAngitiaChatsArgs
 }
 
 /**
@@ -2467,6 +2670,13 @@ export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.NotificationWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAngitiaChatsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AngitiaChatRecordWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2494,6 +2704,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   appointments?: boolean | Prisma.User$appointmentsArgs<ExtArgs>
   emergencyCases?: boolean | Prisma.User$emergencyCasesArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  angitiaChats?: boolean | Prisma.User$angitiaChatsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2557,6 +2768,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   appointments?: boolean | Prisma.User$appointmentsArgs<ExtArgs>
   emergencyCases?: boolean | Prisma.User$emergencyCasesArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  angitiaChats?: boolean | Prisma.User$angitiaChatsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2578,6 +2790,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     appointments: Prisma.$AppointmentPayload<ExtArgs>[]
     emergencyCases: Prisma.$EmergencyCasePayload<ExtArgs>[]
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
+    angitiaChats: Prisma.$AngitiaChatRecordPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2999,6 +3212,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   appointments<T extends Prisma.User$appointmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   emergencyCases<T extends Prisma.User$emergencyCasesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$emergencyCasesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmergencyCasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  angitiaChats<T extends Prisma.User$angitiaChatsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$angitiaChatsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AngitiaChatRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3722,6 +3936,30 @@ export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
+}
+
+/**
+ * User.angitiaChats
+ */
+export type User$angitiaChatsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AngitiaChatRecord
+   */
+  select?: Prisma.AngitiaChatRecordSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AngitiaChatRecord
+   */
+  omit?: Prisma.AngitiaChatRecordOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AngitiaChatRecordInclude<ExtArgs> | null
+  where?: Prisma.AngitiaChatRecordWhereInput
+  orderBy?: Prisma.AngitiaChatRecordOrderByWithRelationInput | Prisma.AngitiaChatRecordOrderByWithRelationInput[]
+  cursor?: Prisma.AngitiaChatRecordWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AngitiaChatRecordScalarFieldEnum | Prisma.AngitiaChatRecordScalarFieldEnum[]
 }
 
 /**

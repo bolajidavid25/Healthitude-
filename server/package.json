@@ -35,6 +35,7 @@
     "test:professional": "tsx src/step2-professional.test.ts",
     "test:doctor-patient": "tsx src/doctor-patient-connection.test.ts",
     "test:firebase": "tsx src/firebase-google-auth.test.ts",
+    "test:ai": "tsx src/ai.test.ts",
     "db:test": "tsx src/test-db.ts",
     "db:inspect": "tsx src/inspect-db.ts",
     "db:verify": "tsx src/verify-migration.ts",
@@ -64,6 +65,8 @@
     "firebase-admin": "^14.5.1",
     "multer": "^2.4.0",
     "pg": "^8.23.1",
+    "prisma": "^7.10.0",
+    "tsx": "^4.23.15",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -71,8 +74,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "nodemon": "^3.1.14",
-    "prisma": "^7.10.0",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
 }

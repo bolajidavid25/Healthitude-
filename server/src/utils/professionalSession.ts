@@ -17,10 +17,12 @@ export const PROF_SESSION_TTL_MS = SESSION_TTL_MS
  * Rule G, H, I: HTTP-only, Secure in production, SameSite=Lax.
  */
 export function getProfSessionCookieOptions(): CookieOptions {
+  const sameSite = env.COOKIE_SAME_SITE
+  const isNone = sameSite === "none"
   return {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: env.NODE_ENV === "production" || isNone,
+    sameSite,
     path: "/",
     maxAge: PROF_SESSION_TTL_MS,
   }
@@ -31,10 +33,12 @@ export function getProfSessionCookieOptions(): CookieOptions {
  * Double-submit cookie readable by client application script.
  */
 export function getProfCsrfCookieOptions(): CookieOptions {
+  const sameSite = env.COOKIE_SAME_SITE
+  const isNone = sameSite === "none"
   return {
     httpOnly: false,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: env.NODE_ENV === "production" || isNone,
+    sameSite,
     path: "/",
     maxAge: PROF_SESSION_TTL_MS,
   }

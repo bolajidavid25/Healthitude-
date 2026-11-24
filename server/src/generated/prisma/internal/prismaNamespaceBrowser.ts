@@ -72,7 +72,8 @@ export const ModelName = {
   ProfessionalVerificationLog: 'ProfessionalVerificationLog',
   Administrator: 'Administrator',
   AdminSession: 'AdminSession',
-  AdminAuditLog: 'AdminAuditLog'
+  AdminAuditLog: 'AdminAuditLog',
+  AngitiaChatRecord: 'AngitiaChatRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -503,6 +504,18 @@ export const AdminAuditLogScalarFieldEnum = {
 export type AdminAuditLogScalarFieldEnum = (typeof AdminAuditLogScalarFieldEnum)[keyof typeof AdminAuditLogScalarFieldEnum]
 
 
+export const AngitiaChatRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  summary: 'summary',
+  messages: 'messages',
+  createdAt: 'createdAt'
+} as const
+
+export type AngitiaChatRecordScalarFieldEnum = (typeof AngitiaChatRecordScalarFieldEnum)[keyof typeof AngitiaChatRecordScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -517,6 +530,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {

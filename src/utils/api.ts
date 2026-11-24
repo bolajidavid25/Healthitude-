@@ -707,10 +707,41 @@ export function getCsrfToken(): string | null {
   return inMemoryCsrfToken || getCookie("healthitude_csrf")
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(
-  /\/+$/,
-  "",
-)
+function resolveApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL || "").trim()
+
+  if (envUrl) {
+    let url = envUrl
+    if (
+      !url.startsWith("http://") &&
+      !url.startsWith("https://") &&
+      !url.startsWith("/")
+    ) {
+      url = `https://${url}`
+    }
+    // If Render injected internal private hostname 'healthitude-api' without TLD
+    if (
+      url.includes("healthitude-api") &&
+      !url.includes(".onrender.com")
+    ) {
+      return "https://healthitude-api.onrender.com"
+    }
+    return url.replace(/\/+$/, "")
+  }
+
+  // Automatic Render production origin binding:
+  // When running on healthitude-web.onrender.com (or any .onrender.com domain), point directly to healthitude-api.onrender.com
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".onrender.com")
+  ) {
+    return "https://healthitude-api.onrender.com"
+  }
+
+  return ""
+}
+
+const API_BASE_URL = resolveApiBaseUrl()
 
 async function fetchApi<T>(
   endpoint: string,
@@ -947,6 +978,52 @@ export interface PatientEmergencyStatusResponse {
 // Centralized API Services
 // -----------------------------------------------------------------------------
 export const api = {
+  // Angitia AI Health Assistant & Platform Co-Pilot
+  ai: {
+    async chat(
+      message: string,
+      history: { role: "user" | "assistant"; text: string }[] = [],
+    ) {
+      const res = await fetchApi<{
+        status: string
+        data: {
+          reply: string
+          source: "gemini" | "fallback"
+          timestamp: string
+          isLoggedIn?: boolean
+        }
+      }>("/api/ai/angitia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, history }),
+      })
+      return res.data
+    },
+    async save(
+      title: string,
+      messages: { role: "user" | "assistant"; text: string; time?: string }[],
+      summary?: string,
+    ) {
+      const res = await fetchApi<{
+        status: string
+        message: string
+        data: any
+      }>("/api/ai/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, messages, summary }),
+      })
+      return res.data
+    },
+    async getHistory() {
+      const res = await fetchApi<{
+        status: string
+        data: any[]
+      }>("/api/ai/history")
+      return res.data
+    },
+  },
+
   // Authentication
   auth: {
     async login(credentials: { email: string password: string }) {

@@ -151,3 +151,8 @@ export type AdminSession = Prisma.AdminSessionModel
  * 
  */
 export type AdminAuditLog = Prisma.AdminAuditLogModel
+/**
+ * Model AngitiaChatRecord
+ * 
+ */
+export type AngitiaChatRecord = Prisma.AngitiaChatRecordModel

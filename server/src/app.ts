@@ -1,12 +1,16 @@
 import express, { Express, Request, Response, Router } from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import fs from "fs"
+import path from "path"
+import { fileURLToPath } from "url"
 import { env } from "./config/env"
 import { healthRouter as defaultHealthRouter } from "./routes/health"
 import { patientRouter } from "./routes/patient"
 import { authRouter } from "./routes/auth"
 import { professionalRouter as defaultProfessionalRouter } from "./routes/professional"
 import { adminRouter as defaultAdminRouter } from "./routes/admin"
+import { aiRouter as defaultAiRouter } from "./routes/ai"
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler"
 
 export interface AppOptions {
@@ -15,6 +19,7 @@ export interface AppOptions {
   authRouter?: Router
   professionalRouter?: Router
   adminRouter?: Router
+  aiRouter?: Router
 }
 
 /**
@@ -28,14 +33,35 @@ export function createApp(options?: AppOptions): Express {
   // Trust first proxy (required for Render/reverse proxies so req.ip and Secure cookies work)
   app.set("trust proxy", 1)
 
+  const currentDir =
+    import.meta.dirname || path.dirname(fileURLToPath(import.meta.url))
+  const distPath = path.resolve(currentDir, "../../dist")
+  const hasDist =
+    fs.existsSync(distPath) && fs.existsSync(path.join(distPath, "index.html"))
+
   // 1. Security & CORS (Rule J, K: Explicit origin(s) with credentials, no wildcard)
-  const allowedOrigins = env.CORS_ORIGIN.split(",")
+  const configuredOrigins = env.CORS_ORIGIN.split(",")
     .map((o) => o.trim())
     .filter(Boolean)
 
   app.use(
     cors({
-      origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
+      origin: (requestOrigin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl, or same-origin)
+        if (!requestOrigin) return callback(null, true)
+
+        // Allow any Healthitude onrender.com origin, localhost, or configured CORS origin
+        if (
+          requestOrigin.endsWith(".onrender.com") ||
+          requestOrigin.includes("localhost") ||
+          requestOrigin.includes("127.0.0.1") ||
+          configuredOrigins.some((co) => requestOrigin.includes(co))
+        ) {
+          return callback(null, true)
+        }
+
+        callback(null, false)
+      },
       credentials: true,
     }),
   )
@@ -45,8 +71,8 @@ export function createApp(options?: AppOptions): Express {
   app.use(express.urlencoded({ extended: true }))
   app.use(cookieParser())
 
-  // 3. Root service ping
-  app.get("/", (req: Request, res: Response) => {
+  // 3. API status ping
+  app.get("/api", (req: Request, res: Response) => {
     res.status(200).json({
       status: "ok",
       service: "Healthitude API",
@@ -54,6 +80,20 @@ export function createApp(options?: AppOptions): Express {
       version: "1.0.0",
     })
   })
+
+  // Static site serving or root ping
+  if (hasDist) {
+    app.use(express.static(distPath))
+  } else {
+    app.get("/", (req: Request, res: Response) => {
+      res.status(200).json({
+        status: "ok",
+        service: "Healthitude API",
+        message: "Healthitude API operational",
+        version: "1.0.0",
+      })
+    })
+  }
 
   // 4. Mount Health Routes (Liveness and Readiness probes)
   const health = options?.healthRouter || defaultHealthRouter
@@ -75,6 +115,17 @@ export function createApp(options?: AppOptions): Express {
   // 8. Mount Administrator Portal Subsystem Routes
   const admin = options?.adminRouter || defaultAdminRouter
   app.use("/api/admin", admin)
+
+  // 8.1 Mount Angitia AI Health Assistant Routes
+  const ai = options?.aiRouter || defaultAiRouter
+  app.use("/api/ai", ai)
+
+  // 8.5 SPA Catch-all when frontend dist is present (routes not starting with /api)
+  if (hasDist) {
+    app.get(/^(?!\/api).*/, (req: Request, res: Response) => {
+      res.sendFile(path.join(distPath, "index.html"))
+    })
+  }
 
   // 9. 404 Fallback for unmatched routes
   app.use(notFoundHandler)

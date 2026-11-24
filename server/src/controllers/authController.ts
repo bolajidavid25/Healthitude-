@@ -111,10 +111,11 @@ export async function logoutHandler(
       await logoutSession(req.session.id)
     }
 
+    const sameSite = env.COOKIE_SAME_SITE
     const clearOpts = {
       path: "/",
-      sameSite: "lax" as const,
-      secure: env.NODE_ENV === "production",
+      sameSite,
+      secure: env.NODE_ENV === "production" || sameSite === "none",
     }
 
     res.clearCookie(SESSION_COOKIE_NAME, { ...clearOpts, httpOnly: true })

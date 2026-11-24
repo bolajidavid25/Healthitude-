@@ -3,6 +3,7 @@ import { Link } from "react-router"
 import logoBlue from "@/imports/Screenshot_2026-09-14_184508-removebg-preview.png"
 import logoWhite from "@/imports/Screenshot_2026-09-14_184307-removebg-preview.png"
 import AngitiaIcon from "@/components/AngitiaIcon"
+import AngitiaAIWidget from "@/components/AngitiaAIWidget"
 import {
   User,
   Stethoscope,
@@ -706,6 +707,7 @@ function WhatWeDo() {
 function AboutUs() {
   return (
     <section
+      id="about"
       className="py-24 px-6 overflow-hidden"
       style={{ background: "#f7f9ff" }}
     >
@@ -717,82 +719,82 @@ function AboutUs() {
           >
             <img
               src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=700&h=560&fit=crop&auto=format"
-              alt="Healthitude medical team"
+              alt="Healthitude Healthcare Innovation"
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl shadow-xl p-5 border border-gray-100 max-w-xs">
+          {/* Founder Profile Card Overlay */}
+          <div className="absolute -bottom-6 -right-4 sm:-right-6 bg-white rounded-2xl shadow-xl p-5 border border-gray-100 max-w-sm">
             <div className="flex items-center gap-3 mb-3">
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                style={{ background: BLUE }}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md flex-shrink-0"
+                style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})` }}
               >
-                H
+                BD
               </div>
               <div>
-                <p className="font-semibold text-gray-800 text-sm">
-                  Healthitude Mission
+                <p className="font-bold text-gray-900 text-sm leading-tight">
+                  Bolaji David
                 </p>
-                <p className="text-xs text-gray-400">
-                  Founded 2024 · Accra, Ghana
+                <p className="text-xs text-blue-700 font-semibold">
+                  Founder · University of Ibadan
+                </p>
+                <p className="text-[11px] text-gray-400">
+                  Founded in Ibadan, Nigeria
                 </p>
               </div>
             </div>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              "To make healthcare continuity the baseline expectation for every
-              patient — regardless of where they seek care."
+            <p className="text-xs text-gray-600 leading-relaxed italic border-t border-gray-100 pt-2.5">
+              "Through the help of God, I built Healthitude to ensure no patient suffers or loses their life because healthcare was too expensive, specialists were unreachable, or medical records were lost."
             </p>
           </div>
         </div>
 
-        <div className="space-y-7">
+        <div className="space-y-6">
           <div>
             <span
-              className="text-xs font-bold uppercase tracking-widest"
-              style={{ color: BLUE }}
+              className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-blue-100/70 text-blue-800 inline-block mb-3"
             >
-              About Us
+              Our Story & Founder's Vision
             </span>
             <h2
-              className="font-display text-4xl font-bold mt-3 mb-5"
+              className="font-display text-3xl sm:text-4xl font-bold tracking-tight"
               style={{ color: NAVY }}
             >
-              Built for a healthcare
+              Solving healthcare's greatest
               <br />
-              system that works.
+              hurdles — from cost to access.
             </h2>
           </div>
-          <p className="text-gray-500 leading-relaxed">
-            Healthitude was founded by clinicians and technologists who
-            experienced firsthand how fragmented healthcare records,
-            disconnected professionals, and opaque pricing cause real harm to
-            real patients.
+
+          <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+            Healthitude was founded in <strong>Ibadan, Nigeria</strong> by <strong>Bolaji David</strong>, a student of the prestigious <strong>University of Ibadan</strong>. Built through the help and grace of God, Healthitude was born out of a deep burden to solve the real, everyday healthcare problems that hold people back.
           </p>
-          <p className="text-gray-500 leading-relaxed">
-            We built a platform where every clinical interaction is recorded,
-            every verified professional is reachable, and every patient —
-            regardless of their billing category — receives continuity of care.
+
+          <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+            For far too long, patients have faced crushing medical costs, agonizing hospital queues, inability to reach doctors when it matters most, and lost paper medical records. Healthitude was built to change that — uniting verified clinicians, transparent category pricing, and lifetime medical continuity into one accessible platform.
           </p>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             {[
               {
-                label: "Patient-first design",
-                desc: "Every feature starts with patient safety and dignity.",
+                label: "Overcoming Healthcare Costs",
+                desc: "Transparent, category-based rates (NHIS, Student, Corporate, General) so financial constraints never prevent treatment.",
               },
               {
-                label: "Professional-grade verification",
-                desc: "Only licensed, verified professionals hold clinical privileges.",
+                label: "Reaching Doctors Anywhere",
+                desc: "Direct telemedicine and instant appointments bridging the gap between patients and verified specialists across borders.",
               },
               {
-                label: "Audited at every step",
-                desc: "Every access, every record, every emergency — logged.",
+                label: "Lifetime Medical Continuity",
+                desc: "Verified, tamper-proof clinical records and prescriptions that travel with you from general practice to specialty care.",
               },
               {
-                label: "Open to all billing types",
-                desc: "NHIS, Insurance, Civil Servant, General — everyone is covered.",
+                label: "Break-Glass Emergency Care",
+                desc: "Rapid emergency alerts connecting nearby clinicians to patients with instant medical snapshots when every second counts.",
               },
             ].map((v) => (
-              <div key={v.label} className="flex items-start gap-3">
+              <div key={v.label} className="flex items-start gap-3 bg-white/80 p-3 rounded-xl border border-blue-50 shadow-xs">
                 <div
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                   style={{ background: "#dcfce7" }}
@@ -812,21 +814,27 @@ function AboutUs() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">
+                  <p className="text-sm font-semibold text-gray-900">
                     {v.label}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">{v.desc}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-snug">{v.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-          <Link
-            to="/patient/register"
-            className="btn-send px-6 py-3 font-semibold text-white"
-          >
-            <span>Join Healthitude Today</span>
-            <ArrowRight className="w-4 h-4 btn-arrow" />
-          </Link>
+
+          <div className="pt-2 flex flex-wrap items-center gap-4">
+            <Link
+              to="/patient/register"
+              className="btn-send px-6 py-3 font-semibold text-white inline-flex items-center gap-2"
+            >
+              <span>Join Healthitude Today</span>
+              <ArrowRight className="w-4 h-4 btn-arrow" />
+            </Link>
+            <span className="text-xs text-gray-400 font-medium">
+              Free Patient Registration · Verified Care
+            </span>
+          </div>
         </div>
       </div>
     </section>
@@ -1739,7 +1747,7 @@ function Footer() {
               className="h-9 object-contain object-left mb-4"
             />
             <p className="text-sm text-gray-400 leading-relaxed mb-5">
-              Healthcare continuity, for everyone. Built in Ghana.
+              Healthcare continuity, for everyone. Founded in Ibadan, Nigeria.
             </p>
             <div className="flex gap-3">
               {["T", "L", "F", "I"].map((s) => (
@@ -1789,177 +1797,6 @@ function Footer() {
   )
 }
 
-// ── Public AI Chat ────────────────────────────────────────────────────────────
-
-const PUBLIC_SUGGESTIONS = [
-  "What is hypertension?",
-  "How does telemedicine work?",
-  "What vaccinations do adults need?",
-  "What is a normal blood pressure reading?",
-  "How do I manage Type 2 diabetes?",
-  "What does NHIS cover?",
-]
-
-function PublicAIChat() {
-  const [open, setOpen] = useState(false)
-  const [input, setInput] = useState("")
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      text: "Hi, I am Angitia — Healthitude's health assistant. Ask me anything about general health: symptoms, conditions, medications, or how Healthitude works. I cannot diagnose, prescribe, or replace your doctor.",
-    },
-  ])
-  const bottomRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, open])
-
-  function send(text?: string) {
-    const msg = (text ?? input).trim()
-    if (!msg) return
-    setMessages((m) => [
-      ...m,
-      { role: "user", text: msg },
-      {
-        role: "assistant",
-        text: "That's a great health question. For personalised advice, I recommend consulting a verified Healthitude doctor. As general information: maintaining a balanced diet, regular physical activity, routine check-ups, and adhering to prescribed medications are cornerstones of good health. Create a free Healthitude account to connect with a verified professional who can give you advice specific to your situation.",
-      },
-    ])
-    setInput("")
-  }
-
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed bottom-24 right-6 z-50 flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
-          style={{ width: "360px", height: "500px" }}
-        >
-          {/* Header */}
-          <div
-            className="flex items-center justify-between px-4 py-3 border-b border-gray-100"
-            style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})` }}
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-                <AngitiaIcon size={18} color="white" pulseColor="#bfdbfe" />
-              </div>
-              <div>
-                <p className="text-white text-sm font-semibold leading-tight">
-                  Angitia
-                </p>
-                <p className="text-white/60 text-xs">
-                  General health knowledge · Free
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-white"
-              aria-label="Close Angitia chat"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Disclaimer */}
-          <div className="px-3 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-700 flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-            General information only — not a medical diagnosis or prescription.
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`flex ${
-                  m.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[82%] rounded-xl px-3.5 py-2.5 text-sm leading-snug ${
-                    m.role === "user"
-                      ? "text-white rounded-br-sm"
-                      : "bg-gray-100 text-gray-700 rounded-bl-sm"
-                  }`}
-                  style={m.role === "user" ? { background: BLUE } : {}}
-                >
-                  {m.text}
-                </div>
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Suggestions — show only before first user message */}
-          {messages.length === 1 && (
-            <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-              {PUBLIC_SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  className="text-xs px-2.5 py-1 border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Input */}
-          <div className="border-t border-gray-100 px-3 py-2.5 flex gap-2 items-center">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ask a health question..."
-            />
-            <button
-              onClick={() => send()}
-              className="btn-send !p-0 w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-lg text-white"
-              aria-label="Send message"
-            >
-              <Send className="w-4 h-4 btn-arrow" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* FAB with Ripple */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className={`group fixed bottom-6 right-6 z-50 flex items-center overflow-visible text-white shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
-          open ? "bg-slate-700" : "btn-ripple"
-        }`}
-        style={{
-          borderRadius: "9999px",
-          width: open ? "3.5rem" : undefined,
-          height: "3.5rem",
-          padding: open ? "0" : undefined,
-          justifyContent: "center",
-        }}
-        aria-label="Angitia"
-      >
-        <span className="flex items-center gap-0 group-hover:gap-2.5 transition-all duration-300 px-4 group-hover:pr-5">
-          {open ? (
-            <X className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <AngitiaIcon size={28} color="white" pulseColor="#bfdbfe" />
-          )}
-          {!open && (
-            <span className="text-sm font-semibold whitespace-nowrap max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300">
-              Ask Angitia
-            </span>
-          )}
-        </span>
-      </button>
-    </>
-  )
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -1980,7 +1817,7 @@ export default function LandingPage() {
       <Roadmap />
       <CTA />
       <Footer />
-      <PublicAIChat />
+      <AngitiaAIWidget />
     </div>
   )
 }
