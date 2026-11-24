@@ -7,8 +7,6 @@ import { api, ApiError, ProfessionalCategoryType } from "@/utils/api"
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator"
 import { isPasswordStrong } from "@/utils/passwordStrength"
 import { explainError, extractFieldErrors } from "@/utils/errorExplainer"
-import { signInWithGooglePopup } from "@/utils/firebase"
-import { GoogleAuthButton } from "@/components/GoogleAuthButton"
 
 const BLUE = "#1a3fcf"
 
@@ -195,11 +193,8 @@ export default function ProfAuthPage({
     false,
     false,
   ])
-  const [googleIdToken, setGoogleIdToken] = useState<string | null>(null)
-  const [googleEmail, setGoogleEmail] = useState<string | null>(null)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-  const { login, refreshUser } = useAuth()
+  const { login } = useAuth()
   const navigate = useNavigate()
   const TOTAL = 3
 
@@ -284,42 +279,6 @@ export default function ProfAuthPage({
     }
   }
 
-  async function handleGoogleAuth() {
-    setErrorMsg(null)
-    setIsGoogleLoading(true)
-    try {
-      const g = await signInWithGooglePopup()
-      const res = await api.professional.googleLogin(g.idToken)
-
-      if (res.needsRegistration || res.data?.needsRegistration) {
-        const gp = res.data?.googleProfile
-        setGoogleIdToken(g.idToken)
-        setGoogleEmail(gp?.email || g.email)
-        setForm((prev) => ({
-          ...prev,
-          firstName: gp?.firstName || prev.firstName,
-          lastName: gp?.lastName || prev.lastName,
-          email: gp?.email || g.email,
-        }))
-        setMode("register")
-        setStep(1)
-        navigate("/professional/register", { replace: true })
-        return
-      }
-
-      await refreshUser()
-      navigate("/professional/dashboard")
-    } catch (err: any) {
-      if (err?.code === "auth/popup-closed-by-user") {
-        setErrorMsg("Google sign-in popup was closed before completing.")
-      } else {
-        setErrorMsg(explainError(err, "Google sign-in failed. Please try again."))
-      }
-    } finally {
-      setIsGoogleLoading(false)
-    }
-  }
-
   function validateStep(curStep: number): boolean {
     const errs: Record<string, string> = {}
     if (curStep === 1) {
@@ -329,21 +288,19 @@ export default function ProfAuthPage({
         errs.email = "Valid email address required"
       if (!form.phoneNumber.trim()) errs.phoneNumber = "Phone number is required"
       
-      // Password strength validation & confirmation check (skipped when registering with Google)
-      if (!googleIdToken) {
-        if (!form.password) {
-          errs.password = "Password is required"
-        } else if (!isPasswordStrong(form.password)) {
-          errs.password = "Password must turn green (satisfy all strength criteria) to continue"
-        }
+      // Password strength validation & confirmation check
+      if (!form.password) {
+        errs.password = "Password is required"
+      } else if (!isPasswordStrong(form.password)) {
+        errs.password = "Password must turn green (satisfy all strength criteria) to continue"
+      }
 
-        if (!isPasswordStrong(form.password)) {
-          errs.confirmPassword = "Confirmation is locked until the password check turns green"
-        } else if (!form.confirmPassword) {
-          errs.confirmPassword = "Confirm password is required"
-        } else if (form.password !== form.confirmPassword) {
-          errs.confirmPassword = "Passwords do not match"
-        }
+      if (!isPasswordStrong(form.password)) {
+        errs.confirmPassword = "Confirmation is locked until the password check turns green"
+      } else if (!form.confirmPassword) {
+        errs.confirmPassword = "Confirm password is required"
+      } else if (form.password !== form.confirmPassword) {
+        errs.confirmPassword = "Passwords do not match"
       }
     } else if (curStep === 2) {
       if (role !== "admin") {
@@ -378,35 +335,20 @@ export default function ProfAuthPage({
     setErrorMsg(null)
 
     try {
-      if (googleIdToken) {
-        await api.professional.googleRegister({
-          idToken: googleIdToken,
-          firstName: form.firstName.trim(),
-          lastName: form.lastName.trim(),
-          phoneNumber: form.phoneNumber.trim(),
-          category: form.category,
-          specialty: form.specialty.trim() || undefined,
-          licenceNumber: form.licenceNumber.trim(),
-          licenceExpiry: form.licenceExpiry || undefined,
-          regulatoryBody: form.regulatoryBody.trim() || undefined,
-          facility: form.facility.trim() || undefined,
-        })
-      } else {
-        await api.professional.register({
-          firstName: form.firstName.trim(),
-          lastName: form.lastName.trim(),
-          email: form.email.trim().toLowerCase(),
-          phoneNumber: form.phoneNumber.trim(),
-          password: form.password,
-          confirmPassword: form.confirmPassword,
-          category: form.category,
-          specialty: form.specialty.trim() || undefined,
-          licenceNumber: form.licenceNumber.trim(),
-          licenceExpiry: form.licenceExpiry || undefined,
-          regulatoryBody: form.regulatoryBody.trim() || undefined,
-          facility: form.facility.trim() || undefined,
-        })
-      }
+      await api.professional.register({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim().toLowerCase(),
+        phoneNumber: form.phoneNumber.trim(),
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+        category: form.category,
+        specialty: form.specialty.trim() || undefined,
+        licenceNumber: form.licenceNumber.trim(),
+        licenceExpiry: form.licenceExpiry || undefined,
+        regulatoryBody: form.regulatoryBody.trim() || undefined,
+        facility: form.facility.trim() || undefined,
+      })
 
       setDone(true)
     } catch (err: any) {
@@ -588,7 +530,7 @@ export default function ProfAuthPage({
 
             <button
               onClick={handleLogin}
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               className="btn-send !w-full !py-3 text-white font-semibold rounded-none flex items-center justify-center gap-2"
             >
               {isLoading ? (
@@ -603,22 +545,6 @@ export default function ProfAuthPage({
                 </>
               )}
             </button>
-
-            {role !== "admin" && (
-              <>
-                <div className="relative flex items-center my-1">
-                  <div className="flex-grow border-t border-gray-200" />
-                  <span className="mx-3 text-xs text-gray-400">or</span>
-                  <div className="flex-grow border-t border-gray-200" />
-                </div>
-                <GoogleAuthButton
-                  onClick={handleGoogleAuth}
-                  loading={isGoogleLoading}
-                  disabled={isLoading}
-                  label="Continue with Google"
-                />
-              </>
-            )}
 
             <p className="text-center text-sm text-gray-500">
               <button
@@ -684,40 +610,6 @@ export default function ProfAuthPage({
             {/* STEP 1: Account & Identity */}
             {step === 1 && (
               <div className="space-y-4">
-                {googleIdToken ? (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center justify-between gap-2">
-                    <span>
-                      Signed in with Google as <strong>{googleEmail}</strong>. No password needed.
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGoogleIdToken(null)
-                        setGoogleEmail(null)
-                      }}
-                      className="text-emerald-700 underline font-medium cursor-pointer"
-                    >
-                      Use password
-                    </button>
-                  </div>
-                ) : (
-                  role !== "admin" && (
-                    <div className="space-y-3">
-                      <GoogleAuthButton
-                        onClick={handleGoogleAuth}
-                        loading={isGoogleLoading}
-                        disabled={isLoading}
-                        label="Sign up with Google"
-                      />
-                      <div className="relative flex items-center">
-                        <div className="flex-grow border-t border-gray-200" />
-                        <span className="mx-3 text-xs text-gray-400">or register with email</span>
-                        <div className="flex-grow border-t border-gray-200" />
-                      </div>
-                    </div>
-                  )
-                )}
-
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="First name" required error={fieldErrors.firstName}>
                     <Input
@@ -752,54 +644,50 @@ export default function ProfAuthPage({
                   />
                 </Field>
 
-                {!googleIdToken && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Field label="Password" required error={fieldErrors.password}>
-                        <Input
-                          type="password"
-                          value={form.password}
-                          onChange={(e) => updateFormField("password", e.target.value)}
-                          placeholder="Min. 8 chars (letters, numbers, symbols)"
-                        />
-                      </Field>
-                      <Field
-                        label="Confirm password"
-                        required
-                        error={
-                          form.confirmPassword && form.password === form.confirmPassword
-                            ? undefined
-                            : fieldErrors.confirmPassword
-                        }
-                      >
-                        <Input
-                          type="password"
-                          value={form.confirmPassword}
-                          onChange={(e) => updateFormField("confirmPassword", e.target.value)}
-                          placeholder={
-                            isPasswordStrong(form.password)
-                              ? "Re-enter your password"
-                              : "Locked until password turns green"
-                          }
-                          disabled={!isPasswordStrong(form.password)}
-                        />
-                        {!isPasswordStrong(form.password) ? (
-                          <p className="text-[11px] text-amber-600 mt-1">
-                            Turn password <strong className="text-emerald-700">green (strong)</strong> to enable confirmation.
-                          </p>
-                        ) : form.confirmPassword && form.password === form.confirmPassword ? (
-                          <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                            Passwords match
-                          </p>
-                        ) : null}
-                      </Field>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Field label="Password" required error={fieldErrors.password}>
+                    <Input
+                      type="password"
+                      value={form.password}
+                      onChange={(e) => updateFormField("password", e.target.value)}
+                      placeholder="Min. 8 chars (letters, numbers, symbols)"
+                    />
+                  </Field>
+                  <Field
+                    label="Confirm password"
+                    required
+                    error={
+                      form.confirmPassword && form.password === form.confirmPassword
+                        ? undefined
+                        : fieldErrors.confirmPassword
+                    }
+                  >
+                    <Input
+                      type="password"
+                      value={form.confirmPassword}
+                      onChange={(e) => updateFormField("confirmPassword", e.target.value)}
+                      placeholder={
+                        isPasswordStrong(form.password)
+                          ? "Re-enter your password"
+                          : "Locked until password turns green"
+                      }
+                      disabled={!isPasswordStrong(form.password)}
+                    />
+                    {!isPasswordStrong(form.password) ? (
+                      <p className="text-[11px] text-amber-600 mt-1">
+                        Turn password <strong className="text-emerald-700">green (strong)</strong> to enable confirmation.
+                      </p>
+                    ) : form.confirmPassword && form.password === form.confirmPassword ? (
+                      <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                        Passwords match
+                      </p>
+                    ) : null}
+                  </Field>
+                </div>
 
-                    {/* Password Strength Colour Check */}
-                    <PasswordStrengthIndicator password={form.password} />
-                  </>
-                )}
+                {/* Password Strength Colour Check */}
+                <PasswordStrengthIndicator password={form.password} />
 
                 <div className="p-3 bg-blue-50 border border-blue-200 text-xs text-blue-800">
                   Registering as <strong>{PROF_ROLES.find((r) => r.value === role)?.label}</strong>.

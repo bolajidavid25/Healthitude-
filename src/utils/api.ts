@@ -1749,42 +1749,6 @@ export const api = {
       })
     },
 
-    async googleLogin(idToken: string) {
-      return fetchApi<{
-        status: string
-        needsRegistration?: boolean
-        message: string
-        professional?: ProfessionalItem
-        hasCsrfToken?: boolean
-        data?: {
-          needsRegistration?: boolean
-          googleProfile?: {
-            email: string
-            firstName: string
-            lastName: string
-            name: string
-            picture: string | null
-          }
-        }
-      }>("/api/professional/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      })
-    },
-
-    async googleRegister(payload: any) {
-      return fetchApi<{
-        status: string
-        message: string
-        data: ProfessionalItem
-      }>("/api/professional/google/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-    },
-
     async logout() {
       return fetchApi<{
         status: string

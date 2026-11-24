@@ -75,23 +75,23 @@ async function runFirebaseGoogleAuthTests() {
     }
     console.log("✓ Check 4 Passed: POST /api/auth/google/register rejects invalid token (401).")
 
-    // Check 5: Professional Google Auth rejects invalid token with 401
+    // Check 5: Professional Google Auth is disabled (404 — Patient Portal only)
     const r4 = await postJson(port, "/api/professional/google", {
       idToken: "invalid-token-value-12345678901234567890",
     })
-    if (r4.status !== 401) {
-      throw new Error(`Expected 401 on /api/professional/google, got ${r4.status}`)
+    if (r4.status !== 404) {
+      throw new Error(`Expected 404 on /api/professional/google (patient-only), got ${r4.status}`)
     }
-    console.log("✓ Check 5 Passed: POST /api/professional/google rejects invalid token (401).")
+    console.log("✓ Check 5 Passed: POST /api/professional/google is disabled (404 — Patient Portal only).")
 
-    // Check 6: Professional Google Register rejects invalid token with 401
+    // Check 6: Professional Google Register is disabled (404 — Patient Portal only)
     const r5 = await postJson(port, "/api/professional/google/register", {
       idToken: "invalid-token-value-12345678901234567890",
     })
-    if (r5.status !== 401) {
-      throw new Error(`Expected 401 on /api/professional/google/register, got ${r5.status}`)
+    if (r5.status !== 404) {
+      throw new Error(`Expected 404 on /api/professional/google/register (patient-only), got ${r5.status}`)
     }
-    console.log("✓ Check 6 Passed: POST /api/professional/google/register rejects invalid token (401).")
+    console.log("✓ Check 6 Passed: POST /api/professional/google/register is disabled (404 — Patient Portal only).")
 
     console.log("\n================================================================================")
     console.log("ALL 6 FIREBASE GOOGLE AUTH CHECKS PASSED SUCCESSFULLY (100%)")

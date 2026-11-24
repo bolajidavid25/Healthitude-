@@ -155,21 +155,18 @@ npm run dev
 
 ---
 
-## 7. Firebase Google Sign-In & Sign-Up Integration
+## 7. Firebase Google Sign-In & Sign-Up Integration (Patient Portal Only)
 
-Healthitude supports **Continue with Google** on both the **Patient Portal** and **Doctor/Professional Portal** (Admins remain email/password only).
+Healthitude supports **Continue with Google** exclusively on the **Patient Portal** (Doctors/Professionals and Admins use email/password authentication).
 
 ### How It Works
-1. **Frontend (`src/utils/firebase.ts`, `src/components/GoogleAuthButton.tsx`)**:
+1. **Frontend (`src/utils/firebase.ts`, `src/components/GoogleAuthButton.tsx`, `src/pages/patient/PatientAuthPage.tsx`)**:
    - Uses Firebase Web SDK (`signInWithPopup` + `GoogleAuthProvider`) to obtain a verified Firebase ID Token.
 2. **Backend (`server/src/config/firebase.ts`, `server/src/services/googleAuthService.ts`, `server/src/controllers/googleAuthController.ts`)**:
-   - Cryptographically verifies the Firebase ID Token via `firebase-admin` (never trusting raw client email).
+   - Cryptographically verifies the Firebase ID Token via `firebase-admin` (or Google's official RS256 public SecureToken certificates fallback) — never trusting raw client email.
    - **Patient Endpoints**:
      - `POST /api/auth/google` — Signs in existing patients (issuing standard `HttpOnly` session + CSRF cookies), or returns `needsOnboarding: true` with verified Google profile (`email`, `firstName`, `lastName`, `picture`) for new users.
      - `POST /api/auth/google/register` — Completes registration with all 7 mandatory consents + health profile without requiring a user-typed password, then signs the patient in immediately.
-   - **Professional Endpoints**:
-     - `POST /api/professional/google` — Signs in existing professionals, or returns `needsRegistration: true` with verified Google profile.
-     - `POST /api/professional/google/register` — Completes doctor registration (still requiring medical licence, regulatory body, specialty, facility, and initializing `verificationStatus = PENDING` for admin approval).
 
 ### Required Render Environment Variables for Firebase
 - **Backend Web Service (`server/`)**:

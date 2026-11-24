@@ -34,10 +34,6 @@ import {
   resolveProfessionalEmergencyHandler,
 } from "../controllers/professionalClinicalController"
 import {
-  googleProfessionalAuthHandler,
-  googleProfessionalRegisterHandler,
-} from "../controllers/googleAuthController"
-import {
   authenticateProfessional,
   requireVerifiedProfessional,
 } from "../middleware/authenticateProfessional"
@@ -99,12 +95,6 @@ export function createProfessionalRouter(): Router {
     loginRateLimiter,
     validateBody(loginProfessionalSchema),
     loginProfessionalHandler,
-  )
-  router.post("/google", loginRateLimiter, googleProfessionalAuthHandler)
-  router.post(
-    "/google/register",
-    loginRateLimiter,
-    googleProfessionalRegisterHandler,
   )
 
   // ─── Authenticated Professional Endpoints (Pending & Verified) ─────────────────
