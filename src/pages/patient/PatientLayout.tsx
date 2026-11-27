@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { useNavigate, Navigate, Link } from "react-router"
+import { useState, useEffect, useCallback } from "react"
+import { useNavigate, Navigate, Link, useSearchParams } from "react-router"
 import logoImg from "@/imports/Screenshot_2026-09-14_184508-removebg-preview.png"
 import { useAuth } from "@/context/AuthContext"
 import AngitiaAIWidget from "@/components/AngitiaAIWidget"
@@ -14,6 +14,7 @@ import {
   Video,
   LogOut,
   Menu,
+  X,
 } from "lucide-react"
 
 const BLUE = "#1a3fcf"
@@ -22,26 +23,65 @@ type View = "dashboard" | "notifications" | "profile"
 export default function PatientLayout() {
   const { user, logout, isLoading } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [view, setView] = useState<View>("dashboard")
+  const [dashboardTab, setDashboardTab] = useState<string>(
+    () => searchParams.get("tab") || "overview",
+  )
   const [unreadCount, setUnreadCount] = useState<number>(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Load unread count on mount and when view changes
+  // Keep dashboard tab synced with URL ?tab=... dynamically without reload
   useEffect(() => {
-    let mounted = true
+    const tabParam = searchParams.get("tab")
+    if (tabParam) {
+      if (tabParam === "profile") {
+        setView("profile")
+      } else if (tabParam === "notifications") {
+        setView("notifications")
+      } else {
+        setDashboardTab(tabParam === "medications" ? "prescriptions" : tabParam)
+        setView("dashboard")
+      }
+    }
+  }, [searchParams])
+
+  const refreshUnreadCount = useCallback(() => {
     api.patient.notifications
       .getUnreadCount()
-      .then((res) => {
-        if (mounted) setUnreadCount(res.unreadCount)
-      })
-      .catch((err) =>
-        console.error("[PatientLayout] Error loading unread count:", err),
-      )
+      .then((res) => setUnreadCount(res.unreadCount))
+      .catch(() => {})
+  }, [])
+
+  // Live unread notification count: on mount, view change, custom event, focus, and 15s poll
+  useEffect(() => {
+    refreshUnreadCount()
+    const onRefresh = () => refreshUnreadCount()
+    window.addEventListener("healthitude:refresh-notifications", onRefresh)
+    window.addEventListener("focus", onRefresh)
+    const timer = setInterval(refreshUnreadCount, 15000)
 
     return () => {
-      mounted = false
+      window.removeEventListener("healthitude:refresh-notifications", onRefresh)
+      window.removeEventListener("focus", onRefresh)
+      clearInterval(timer)
     }
-  }, [view])
+  }, [view, refreshUnreadCount])
+
+  const handleNotificationNavigate = useCallback(
+    (tab: string) => {
+      if (tab === "profile") {
+        setView("profile")
+        setSearchParams({ tab: "profile" }, { replace: true })
+        return
+      }
+      const normalized = tab === "medications" ? "prescriptions" : tab
+      setDashboardTab(normalized)
+      setView("dashboard")
+      setSearchParams({ tab: normalized }, { replace: true })
+    },
+    [setSearchParams],
+  )
 
   if (isLoading) {
     return (
@@ -247,9 +287,20 @@ export default function PatientLayout() {
 
         {/* Content Body */}
         <div className="p-4 sm:p-6 lg:p-8 flex-1">
-          {view === "dashboard" && <PatientDashboard />}
+          {view === "dashboard" && (
+            <PatientDashboard
+              activeTab={dashboardTab}
+              onTabChange={(t) => {
+                setDashboardTab(t)
+                setSearchParams({ tab: t }, { replace: true })
+              }}
+            />
+          )}
           {view === "notifications" && (
-            <NotificationsPanel onUnreadCountChange={setUnreadCount} />
+            <NotificationsPanel
+              onUnreadCountChange={setUnreadCount}
+              onNavigate={handleNotificationNavigate}
+            />
           )}
           {view === "profile" && <ProfilePanel role="patient" />}
         </div>

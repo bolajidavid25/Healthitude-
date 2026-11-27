@@ -354,16 +354,23 @@ function ComplaintsPanel() {
     setSubmitting(true)
     setFormError(null)
     try {
-      await api.patient.createComplaint({
+      const created = await api.patient.createComplaint({
         symptoms: symptoms.trim(),
         severity: severity,
         duration: duration.trim() || undefined,
       })
+      if (created) {
+        setComplaints((prev) => [
+          created,
+          ...prev.filter((c) => c.id !== created.id),
+        ])
+      }
+      window.dispatchEvent(new Event("healthitude:refresh-notifications"))
       setSymptoms("")
       setSeverity("Moderate")
       setDuration("")
       setShowForm(false)
-      await loadComplaints()
+      loadComplaints()
     } catch (err: any) {
       setFormError(
         err?.message || "Failed to submit complaint. Please check your inputs.",
@@ -1501,6 +1508,8 @@ function AppointmentsPanel({
         date: bookingDate,
         time: bookingTime,
       })
+      setAppointments((prev) => [created, ...prev.filter((a) => a.id !== created.id)])
+      window.dispatchEvent(new Event("healthitude:refresh-notifications"))
       setBookedApt(created)
       setBooking(false)
       setIntake(true)
@@ -1683,6 +1692,8 @@ function AppointmentsPanel({
               onClick={() => {
                 setIntake(false)
                 setBookedApt(null)
+                setAptTab("upcoming")
+                loadAppointments("upcoming")
               }}
               className="px-5 py-3 rounded-lg border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-all cursor-pointer"
             >
@@ -3880,12 +3891,45 @@ function AIAssistantPanel() {
   )
 }
 
-export default function PatientDashboard() {
-  const [view, setView] = useState<PatientView>("overview")
+export default function PatientDashboard({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab?: string
+  onTabChange?: (tab: string) => void
+} = {}) {
+  const validViews: PatientView[] = [
+    "overview",
+    "complaints",
+    "records",
+    "prescriptions",
+    "appointments",
+    "telemedicine",
+    "providers",
+    "pricing",
+    "emergency",
+  ]
+  const resolvedInitial: PatientView =
+    activeTab && validViews.includes(activeTab as PatientView)
+      ? (activeTab as PatientView)
+      : "overview"
+
+  const [view, setViewState] = useState<PatientView>(resolvedInitial)
   const [preselectedDoctor, setPreselectedDoctor] = useState<string | null>(
     null,
   )
   const [openBookingOnApt, setOpenBookingOnApt] = useState(false)
+
+  useEffect(() => {
+    if (activeTab && validViews.includes(activeTab as PatientView)) {
+      setViewState(activeTab as PatientView)
+    }
+  }, [activeTab])
+
+  const setView = (next: PatientView) => {
+    setViewState(next)
+    onTabChange?.(next)
+  }
 
   const navItems: { id: PatientView label: string icon: React.ReactNode }[] = [
     {

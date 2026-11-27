@@ -1724,47 +1724,56 @@ export default function DoctorDashboard() {
   const [prescriptions, setPrescriptions] = useState<DoctorPrescription[]>([])
   const [emergencies, setEmergencies] = useState<DoctorEmergency[]>([])
 
-  const loadClinicalData = useCallback(async () => {
-    if (!isVerified) return
-    setLoading(true)
-    setLoadError(null)
-    try {
-      const [dash, apts, cpls, pats, recs, rxs, emgs] = await Promise.all([
-        api.professional.getDashboard(),
-        api.professional.getAppointments({ tab: "all" }),
-        api.professional.getComplaints(),
-        api.professional.getPatients(),
-        api.professional.getClinicalRecords(),
-        api.professional.getPrescriptions(),
-        api.professional.getEmergencies(),
-      ])
-      setSummary(dash)
-      setAppointments(apts)
-      setComplaints(cpls)
-      setPatients(pats)
-      setRecords(recs)
-      setPrescriptions(rxs)
-      setEmergencies(emgs)
-    } catch (err: any) {
-      setLoadError(
-        err?.message ||
-          "Unable to load clinical data from the Healthitude server.",
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [isVerified])
+  const loadClinicalData = useCallback(
+    async (silent = false) => {
+      if (!isVerified) return
+      if (!silent) setLoading(true)
+      setLoadError(null)
+      try {
+        const [dash, apts, cpls, pats, recs, rxs, emgs] = await Promise.all([
+          api.professional.getDashboard(),
+          api.professional.getAppointments({ tab: "all" }),
+          api.professional.getComplaints(),
+          api.professional.getPatients(),
+          api.professional.getClinicalRecords(),
+          api.professional.getPrescriptions(),
+          api.professional.getEmergencies(),
+        ])
+        setSummary(dash)
+        setAppointments(apts)
+        setComplaints(cpls)
+        setPatients(pats)
+        setRecords(recs)
+        setPrescriptions(rxs)
+        setEmergencies(emgs)
+      } catch (err: any) {
+        if (!silent) {
+          setLoadError(
+            err?.message ||
+              "Unable to load clinical data from the Healthitude server.",
+          )
+        }
+      } finally {
+        if (!silent) setLoading(false)
+      }
+    },
+    [isVerified],
+  )
 
   useEffect(() => {
-    loadClinicalData()
+    loadClinicalData(false)
   }, [loadClinicalData])
 
-  // Auto-refresh when the doctor switches back to this browser tab
+  // Live auto-refresh every 15s + on tab focus so new patient bookings/complaints appear without reload
   useEffect(() => {
     if (!isVerified) return
-    const onFocus = () => loadClinicalData()
+    const onFocus = () => loadClinicalData(true)
     window.addEventListener("focus", onFocus)
-    return () => window.removeEventListener("focus", onFocus)
+    const timer = setInterval(() => loadClinicalData(true), 15000)
+    return () => {
+      window.removeEventListener("focus", onFocus)
+      clearInterval(timer)
+    }
   }, [isVerified, loadClinicalData])
 
   // Rule 3.B: Unverified professionals see only the Verification view

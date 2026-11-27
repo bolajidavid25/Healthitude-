@@ -22,10 +22,39 @@ import {
 
 interface NotificationsPanelProps {
   onUnreadCountChange?: (count: number) => void
+  onNavigate?: (tab: string) => void
+}
+
+function resolveNotificationTab(n: NotificationItem): string {
+  if (n.link) {
+    const match = n.link.match(/tab=([a-z]+)/i)
+    if (match) {
+      const tab = match[1].toLowerCase()
+      return tab === "medications" ? "prescriptions" : tab
+    }
+  }
+  switch (n.type) {
+    case "APPOINTMENT_CONFIRMED":
+    case "APPOINTMENT_RESCHEDULED":
+    case "APPOINTMENT_CANCELLED":
+      return "appointments"
+    case "COMPLAINT_SUBMITTED":
+    case "COMPLAINT_UPDATED":
+      return "complaints"
+    case "CLINICAL_RECORD_ADDED":
+      return "records"
+    case "PRESCRIPTION_ADDED":
+      return "prescriptions"
+    case "EMERGENCY_ALERT":
+      return "emergency"
+    default:
+      return "overview"
+  }
 }
 
 export default function NotificationsPanel({
   onUnreadCountChange,
+  onNavigate,
 }: NotificationsPanelProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState<number>(0)
@@ -315,7 +344,11 @@ export default function NotificationsPanel({
             return (
               <div
                 key={n.id}
-                className={`group relative bg-white rounded-xl border p-5 transition-all duration-150 hover:shadow-md ${
+                onClick={() => {
+                  if (!n.read) handleMarkAsRead(n.id)
+                  onNavigate?.(resolveNotificationTab(n))
+                }}
+                className={`group relative bg-white rounded-xl border p-5 transition-all duration-150 hover:shadow-md hover:border-blue-300 cursor-pointer ${
                   !n.read
                     ? "border-blue-200 bg-gradient-to-r from-blue-50/30 via-white to-white shadow-sm"
                     : "border-gray-100 opacity-90 shadow-sm"
@@ -362,7 +395,10 @@ export default function NotificationsPanel({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 flex-shrink-0 self-start">
+                  <div
+                    className="flex items-center gap-1 flex-shrink-0 self-start"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {!n.read && (
                       <button
                         onClick={() => handleMarkAsRead(n.id)}
