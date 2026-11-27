@@ -1759,6 +1759,14 @@ export default function DoctorDashboard() {
     loadClinicalData()
   }, [loadClinicalData])
 
+  // Auto-refresh when the doctor switches back to this browser tab
+  useEffect(() => {
+    if (!isVerified) return
+    const onFocus = () => loadClinicalData()
+    window.addEventListener("focus", onFocus)
+    return () => window.removeEventListener("focus", onFocus)
+  }, [isVerified, loadClinicalData])
+
   // Rule 3.B: Unverified professionals see only the Verification view
   if (!isVerified) {
     return <VerificationView summary={summary} />

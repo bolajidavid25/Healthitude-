@@ -182,7 +182,7 @@ export async function createAppointment(
   const dateObj = new Date(`${input.date}T00:00:00.000Z`)
 
   // Resolve real verified Professional in PostgreSQL so appointment connects to the doctor's portal
-  let resolvedDoctorId = input.doctorId || null
+  let resolvedDoctorId: string | null = null
   let resolvedDoctorName = input.doctorName
   let resolvedDepartment = input.department
 

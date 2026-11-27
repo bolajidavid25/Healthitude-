@@ -61,7 +61,8 @@ function formatBloodGroup(bg?: string | null): string {
 
 /**
  * Builds the Prisma WHERE clause matching appointments assigned to this professional
- * either by authoritative `doctorId` or by matching `doctorName`.
+ * by authoritative `doctorId`, matching `doctorName`, or unassigned bookings (`doctorId: null`)
+ * so patient appointments are never orphaned when booked against fallback directory entries.
  */
 function buildDoctorAppointmentFilter(prof: SafeProfessional) {
   const displayName = formatProfessionalDisplayName(prof)
@@ -71,6 +72,7 @@ function buildDoctorAppointmentFilter(prof: SafeProfessional) {
       { doctorId: prof.id },
       { doctorName: { equals: displayName, mode: "insensitive" as const } },
       { doctorName: { contains: fullName, mode: "insensitive" as const } },
+      { doctorId: null },
     ],
   }
 }

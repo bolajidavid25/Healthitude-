@@ -1319,6 +1319,7 @@ function AppointmentsPanel({
   const [intake, setIntake] = useState(false)
   const [visitReason, setVisitReason] = useState("")
   const [selectedDoctor, setSelectedDoctor] = useState("Dr. Kofi Boateng")
+  const [availableProviders, setAvailableProviders] = useState<ProviderItem[]>([])
   const [bookingDate, setBookingDate] = useState(() => {
     const d = new Date()
     d.setDate(d.getDate() + 3)
@@ -1326,6 +1327,17 @@ function AppointmentsPanel({
   })
   const [bookingTime, setBookingTime] = useState("10:00 AM")
   const [submittingBooking, setSubmittingBooking] = useState(false)
+
+  useEffect(() => {
+    api.providers
+      .getAll({ limit: 50 })
+      .then((res) => {
+        if (res?.providers?.length) {
+          setAvailableProviders(res.providers)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (initialBookingOpen) {
@@ -1465,15 +1477,24 @@ function AppointmentsPanel({
     setSubmittingBooking(true)
     setError(null)
     try {
-      let department = "General Practice"
-      if (selectedDoctor.includes("Asante") || selectedDoctor.includes("Ade"))
-        department = "Cardiology"
-      else if (selectedDoctor.includes("Samuel")) department = "Pediatrics"
-      else if (selectedDoctor.includes("Mensah")) department = "Dermatology"
-      else if (selectedDoctor.includes("Kwame")) department = "Neurology"
+      const matchedProvider = availableProviders.find(
+        (p) =>
+          p.name.toLowerCase() === selectedDoctor.toLowerCase() ||
+          p.id === selectedDoctor,
+      )
+
+      let department = matchedProvider?.specialty || "General Practice"
+      if (!matchedProvider) {
+        if (selectedDoctor.includes("Asante") || selectedDoctor.includes("Ade"))
+          department = "Cardiology"
+        else if (selectedDoctor.includes("Samuel")) department = "Pediatrics"
+        else if (selectedDoctor.includes("Mensah")) department = "Dermatology"
+        else if (selectedDoctor.includes("Kwame")) department = "Neurology"
+      }
 
       const created = await api.patient.createAppointment({
-        doctorName: selectedDoctor,
+        doctorId: matchedProvider?.id,
+        doctorName: matchedProvider?.name || selectedDoctor,
         department,
         type: "General Consultation",
         reason: visitReason,
@@ -1738,30 +1759,28 @@ function AppointmentsPanel({
               onChange={(e) => setSelectedDoctor(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
             >
-              <option value="Dr. Kofi Boateng">
-                Dr. Kofi Boateng — General Practice (Accra)
-              </option>
-              <option value="Dr. Efua Asante">
-                Dr. Efua Asante — Cardiology (Accra)
-              </option>
-              <option value="Dr. Ama Bentil">
-                Dr. Ama Bentil — General Practice (Accra)
-              </option>
-              <option value="Dr. Samuel Osei">
-                Dr. Samuel Osei — Pediatrics (Accra)
-              </option>
-              <option value="Dr. Sarah Johnson">
-                Dr. Sarah Johnson — General Practice (Accra)
-              </option>
-              <option value="Dr. Michael Ade">
-                Dr. Michael Ade — Cardiology (Lagos)
-              </option>
-              <option value="Dr. Afia Mensah">
-                Dr. Afia Mensah — Dermatology (Kumasi)
-              </option>
-              <option value="Dr. Kwame Osei">
-                Dr. Kwame Osei — Neurology (Accra)
-              </option>
+              {availableProviders.length > 0 ? (
+                availableProviders.map((prov) => (
+                  <option key={prov.id} value={prov.name}>
+                    {prov.name} — {prov.specialty} ({prov.facility})
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="Dr. Kofi Boateng">
+                    Dr. Kofi Boateng — General Practice (Accra)
+                  </option>
+                  <option value="Dr. Efua Asante">
+                    Dr. Efua Asante — Cardiology (Accra)
+                  </option>
+                  <option value="Dr. Ama Bentil">
+                    Dr. Ama Bentil — General Practice (Accra)
+                  </option>
+                  <option value="Dr. Michael Ade">
+                    Dr. Michael Ade — Cardiology (Lagos)
+                  </option>
+                </>
+              )}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">
