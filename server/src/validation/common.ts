@@ -53,13 +53,23 @@ export function normalizePhoneNumber(rawPhone: string): string {
     return `+${cleaned}`
   }
 
-  // 3. International standard E.164 (+ followed by 7-15 digits, non-zero country code)
+  // 3. Nigeria local 11-digit mobile number (e.g., 08012345678, 09059916625, 07012345678, 08112345678)
+  if (/^0[789][01][0-9]{8}$/.test(cleaned)) {
+    return `+234${cleaned.slice(1)}`
+  }
+
+  // 4. Nigeria 13-digit number with 234 without '+' (e.g., 2349059916625)
+  if (/^234[789][01][0-9]{8}$/.test(cleaned)) {
+    return `+${cleaned}`
+  }
+
+  // 5. International standard E.164 (+ followed by 7-15 digits, non-zero country code)
   if (/^\+[1-9]\d{6,14}$/.test(cleaned)) {
     return cleaned
   }
 
   throw new Error(
-    "Invalid phone number format. Provide a valid Ghana phone number (e.g. 0241234567) or international number in E.164 format (+233241234567)",
+    "Invalid phone number format. Provide a valid Ghana/Nigeria phone number (e.g. 08012345678, 0241234567) or international E.164 format (+2348012345678)",
   )
 }
 

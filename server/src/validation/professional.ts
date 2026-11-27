@@ -63,15 +63,20 @@ export const registerProfessionalSchema = z
     password: passwordSchema,
     confirmPassword: z.string({ required_error: "Confirm password is required" }),
     category: z
-      .enum(["DOCTOR", "doctor"] as const, {
+      .enum(["DOCTOR", "doctor", "NURSE", "nurse", "PHARMACIST", "pharmacist"] as const, {
         errorMap: () => ({
           message:
-            "Only doctors are supported for clinical registration in this phase. Administrative access cannot be assigned via public registration.",
+            "Only Doctor, Nurse, or Pharmacist accounts can register here. Administrative access cannot be assigned via public registration.",
         }),
       })
       .optional()
       .default("DOCTOR")
-      .transform(() => ProfessionalCategory.DOCTOR),
+      .transform((val) => {
+        const up = val.toUpperCase()
+        if (up === "NURSE") return ProfessionalCategory.NURSE
+        if (up === "PHARMACIST") return ProfessionalCategory.PHARMACIST
+        return ProfessionalCategory.DOCTOR
+      }),
     profession: z.string().trim().min(2).max(100).optional().default("Medical Doctor"),
     specialty: z
       .string({ required_error: "Specialty is required" })

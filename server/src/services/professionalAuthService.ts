@@ -196,7 +196,7 @@ export async function registerProfessional(
       email: normalizedEmail,
       phoneNumber: input.phoneNumber,
       passwordHash,
-      category: ProfessionalCategory.DOCTOR,
+      category: input.category || ProfessionalCategory.DOCTOR,
       profession: input.profession?.trim() || "Medical Doctor",
       specialty: input.specialty,
       specialistQualification: input.specialistQualification?.trim() || null,

@@ -168,22 +168,22 @@ export default function ProfAuthPage({
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("doctor@healthitude.com")
-  const [loginPassword, setLoginPassword] = useState("DoctorPassword123!")
+  const [loginPassword, setLoginPassword] = useState("Doctor@Healthitude2026!")
 
   // Registration form state
   const [form, setForm] = useState({
-    firstName: "Kofi",
-    lastName: "Boateng",
+    firstName: "",
+    lastName: "",
     email: "",
-    phoneNumber: "+233 24 123 4567",
+    phoneNumber: "",
     password: "",
     confirmPassword: "",
     category: "DOCTOR" as ProfessionalCategoryType,
     specialty: "General Practice",
-    licenceNumber: "GMA-2026-0841",
+    licenceNumber: "",
     licenceExpiry: "2028-12-31",
-    regulatoryBody: "Ghana Medical Association",
-    facility: "Korle Bu Teaching Hospital",
+    regulatoryBody: "",
+    facility: "",
   })
 
   const [consents, setConsents] = useState<boolean[]>([
@@ -223,36 +223,30 @@ export default function ProfAuthPage({
     setErrorMsg(null)
     if (newRole === "admin") {
       setLoginEmail("admin@healthitude.com")
-      setLoginPassword("AdminPassword123!")
+      setLoginPassword("Admin@Healthitude2026!")
     } else if (newRole === "doctor") {
       setLoginEmail("doctor@healthitude.com")
-      setLoginPassword("DoctorPassword123!")
+      setLoginPassword("Doctor@Healthitude2026!")
       setForm((p) => ({
         ...p,
         category: "DOCTOR",
-        specialty: "General Practice",
-        regulatoryBody: "Ghana Medical Association",
-        licenceNumber: "GMA-2026-0841",
+        specialty: p.specialty || "General Practice",
       }))
     } else if (newRole === "nurse") {
-      setLoginEmail("nurse@healthitude.com")
-      setLoginPassword("NursePassword123!")
+      setLoginEmail("")
+      setLoginPassword("")
       setForm((p) => ({
         ...p,
         category: "NURSE",
-        specialty: "Perioperative Care",
-        regulatoryBody: "Ghana Nurses & Midwives Council",
-        licenceNumber: "GNC-2026-0422",
+        specialty: p.specialty || "General Nursing",
       }))
     } else if (newRole === "pharmacist") {
-      setLoginEmail("pharmacist@healthitude.com")
-      setLoginPassword("PharmPassword123!")
+      setLoginEmail("")
+      setLoginPassword("")
       setForm((p) => ({
         ...p,
         category: "PHARMACIST",
-        specialty: "Clinical Pharmacy",
-        regulatoryBody: "Pharmacy Council of Ghana",
-        licenceNumber: "PC-2026-0911",
+        specialty: p.specialty || "Clinical Pharmacy",
       }))
     }
   }
